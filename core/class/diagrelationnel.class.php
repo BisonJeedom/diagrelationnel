@@ -268,7 +268,7 @@ class diagrelationnel extends eqLogic {
             $dsl = '[' . $from_sc_name . $from_desc . $from_color . ']' . '^-.-' . $definedAction_type . '[' . $definedAction_name . $action_color . '],';
             log::add(__CLASS__, 'debug', '  dsl : ' . $dsl);
             $dsltext .= $dsl;
-            $relations_array[] = $this->record_relation(2, $arr_definedAction['definedAction'][0]['cmdId'], 0, '', $from_sc->getId(), $from_ingroup, $from_desc);
+            $relations_array[] = $this->record_relation(2, $action['cmdId'], 0, '', $from_sc->getId(), $from_ingroup, $from_desc);
           }
         }
 

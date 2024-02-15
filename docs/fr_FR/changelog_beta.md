@@ -1,0 +1,1 @@
+# Changelog plugin diagrelationnel - beta

@@ -1,0 +1,34 @@
+{
+	"id": "diagrelationnel",
+	"name": "Diagramme relationnel",
+	"pluginVersion": "0.1",
+	"description": {
+		"fr_FR": "Ce plugin permet la création de diagramme relationnel des liens entres scénarios et déclencheurs"
+	},
+	"licence": "AGPL",
+	"author": "Bison",
+	"require": "4.2",
+	"category": "organization",
+	"hasDependency": false,
+	"hasOwnDeamon": false,
+	"maxDependancyInstallTime": 0,
+	"changelog_beta": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel\/beta\/changelog",
+	"changelog": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel\/changelog",
+	"documentation_beta": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel\/beta",
+	"documentation": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel",
+	"link": {
+		"forum": "Lien vers le forum",
+		"video": "Lien vers une video"
+	},
+	"language": [
+		"fr_FR"
+	],
+	"compatibility": [
+		"smart",
+		"luna",
+		"atlas",
+		"rpi",
+		"docker",
+		"diy"
+	]
+}

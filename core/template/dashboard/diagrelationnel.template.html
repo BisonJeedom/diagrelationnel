@@ -1,0 +1,48 @@
+<div class="eqLogic eqLogic-widget allowResize text-center" data-eqType="#eqType#"
+    data-translate-category="#translate_category#" data-category="#category#" data-tags="#tags#" data-eqLogic_id="#id#"
+    data-eqLogic_uid="#uid#" data-version="#version#"
+    style="min-width : 50px;min-height : 80px ;border:#border#;border-radius:#border-radius#;background-color: #background-color#;color: #color#;width: #width#;height: #height#;#style#">
+    <div class="widget-name">
+        <span style="color:#background-color#" title="#alert_name#">
+            <i class='#alert_icon#'></i>
+        </span>
+        <span class="cmd refresh pull-right cursor" data-cmd_id="#refresh_id#">
+            <a><i class="fas fa-sync tooltips" title="Mise à jour du diagramme"></i></a>
+        </span>
+        <span class="cmd pull-right cursor"
+            style="margin-left: 3px;margin-top: 5px; color: var(--link-color) !important;">
+            <a><i class="fas fa-project-diagram #icon_color# tooltips" style="font-size: small;"
+                    title="#icon_tips#"></i></a>
+        </span>
+        <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
+        <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
+    </div>
+    <center>
+        <span>
+            <p
+                style="border: 2px solid rgba(var(--cat-other-color), var(--opacity)); border-top: 0px; border-radius: 0px 0px 20px 20px; margin-left: 30px; margin-right: 30px">
+                #desc#
+            </p>
+        </span>
+        <img class="img-responsive cursor displayImage" src=#url# alt=""
+            style="max-width:260px; background: var(--objectTxt-color)" />
+        <div style="font-size: small; margin-top:10px">#lastupdate#</div>
+    </center>
+</div>
+
+<script>
+    if ('#refresh_id#' != '') {
+        $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').on('click', function () {
+            jeedom.cmd.execute({ id: '#refresh_id#' });
+        });
+    } else {
+        $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').remove();
+    }
+
+    $('.displayImage').on('click', function () {
+        $('#md_modal').dialog({
+            title: 'Diagramme relationnel des scénarios du groupe #group_name#'
+        });
+        $('#md_modal').load('index.php?v=d&plugin=diagrelationnel&modal=modal.diagrelationnel&src=' + $(this).attr('src')).dialog('open');
+    });
+</script>

@@ -577,7 +577,11 @@ class diagrelationnel extends eqLogic {
       $linkschanged = $this->getCmd('info', 'linkschanged')->execCmd();
       $replace['#group_name#'] = $selected_group;
       $replace['#url#'] = 'core/php/downloadFile.php?pathfile=' . urlencode($dir . '/' . $filename);
-      $replace['#desc#'] = $this->getComment();
+      if ($this->getComment() == '') {
+        $replace['#desc#'] = '';
+      } else {
+        $replace['#desc#'] = '<p style="border: 2px solid rgba(var(--cat-other-color), var(--opacity)); border-top: 0px; border-radius: 0px 0px 20px 20px; margin-left: 30px; margin-right: 30px">' . $this->getComment() . '</p>';
+      }
       if ($this->getCmd('info', 'lastupdate')->execCmd() == '') {
         $replace['#lastupdate#'] = '';
       } else {

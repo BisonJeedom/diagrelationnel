@@ -58,7 +58,7 @@ class diagrelationnel extends eqLogic {
 
     $result = curl_exec($ch);
     if (curl_errno($ch)) {
-      log::add(__CLASS__, 'debug', curl_error($ch));
+      log::add(__CLASS__, 'error', curl_error($ch));
     }
     curl_close($ch);
     return ($result);
@@ -72,7 +72,7 @@ class diagrelationnel extends eqLogic {
 
     $content = curl_exec($ch);
     if ($content === false) {
-      log::add('Diagramme relationnel', 'error', __FUNCTION__ . "URL: $url Failed curl_error: (" . curl_errno($ch) . ") " . curl_error($ch));
+      log::add(__CLASS__, 'error', __FUNCTION__ . "URL: $url Failed curl_error: (" . curl_errno($ch) . ") " . curl_error($ch));
       curl_close($ch);
       return (null);
     }
@@ -105,6 +105,7 @@ class diagrelationnel extends eqLogic {
   function cleanstring($_str) {
     $str = str_replace('[', '［', $_str);
     $str = str_replace(']', '］', $str);
+    $str = str_replace('&', '＆', $str);
     return $str;
   }
 
@@ -362,10 +363,8 @@ class diagrelationnel extends eqLogic {
       log::add(__CLASS__, 'info', 'Demande de la mise à jour du diagramme relationnel');
       ///////////////////////////////////////////////
       // Modifier l'image du widget type loading ? //
-      ///////////////////////////////////////////////
-
+      ///////////////////////////////////////////////     
       log::add(__CLASS__, 'debug', '  dsltext à envoyer : ' . $dsltext);
-
       $result = $this->generate_diagram($dsltext); // Génération du diagramme
       //log::add(__CLASS__, 'debug', 'result : ' . $result);
 
@@ -578,7 +577,11 @@ class diagrelationnel extends eqLogic {
       $linkschanged = $this->getCmd('info', 'linkschanged')->execCmd();
       $replace['#group_name#'] = $selected_group;
       $replace['#url#'] = 'core/php/downloadFile.php?pathfile=' . urlencode($dir . '/' . $filename);
-      $replace['#desc#'] = $this->getComment();
+      if ($this->getComment() == '') {
+        $replace['#desc#'] = '';
+      } else {
+        $replace['#desc#'] = '<p style="border: 2px solid rgba(var(--cat-other-color), var(--opacity)); border-top: 0px; border-radius: 0px 0px 20px 20px; margin-left: 30px; margin-right: 30px">' . $this->getComment() . '</p>';
+      }
       if ($this->getCmd('info', 'lastupdate')->execCmd() == '') {
         $replace['#lastupdate#'] = '';
       } else {

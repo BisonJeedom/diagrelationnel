@@ -26,4 +26,4 @@ if (substr_compare(init('src'), '.png', -strlen('.png')) !== 0) {
 if (strpos(init('src'), 'diagrelationnel') === false) {
     throw new Exception('{{401 - Accès non autorisé}}');
 }
-echo '<center><img class="img-responsive" src="' . init('src') . '" style="background: var(--objectTxt-color)" /></center>';
+echo '<center><img class="img-responsive" src="' . init('src') . '" style="background: var(--objectTxt-color); max-width: 370%;" /></center>';

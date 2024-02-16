@@ -22,14 +22,14 @@ class diagrelationnel extends eqLogic {
 
   static function setupCron($creation) {
     if ($creation == 1) {
-      // Cron toutes les 15 minutes pour le moment
+      // Cron à 00h30
       $oCron = cron::byClassAndFunction(__CLASS__, 'diagrelationnelCron');
       if (!is_object($oCron)) {
         $oCron = new cron();
         $oCron->setClass('diagrelationnel');
         $oCron->setFunction('diagrelationnelCron');
         $oCron->setEnable(1);
-        $oCron->setSchedule('*/15 * * * *');
+        $oCron->setSchedule('30 0 * * *');
         $oCron->setTimeout('2');
         $oCron->save();
       }

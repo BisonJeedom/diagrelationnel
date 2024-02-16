@@ -581,11 +581,11 @@ class diagrelationnel extends eqLogic {
       if ($this->getCmd('info', 'lastupdate')->execCmd() == '') {
         $replace['#lastupdate#'] = '';
       } else {
-        $replace['#lastupdate#'] = 'Mise à jour : ' . date('d/m/Y h:i:s', $this->getCmd('info', 'lastupdate')->execCmd());
+        $replace['#lastupdate#'] = 'Mise à jour : ' . date('d/m/Y H:i:s', $this->getCmd('info', 'lastupdate')->execCmd());
       }
 
       $replace['#icon_color#'] = $linkschanged == 1 ? 'icon_yellow' : '';
-      $replace['#icon_tips#'] = $linkschanged == 1 ? 'Les relations entre les objets ont été modifiées, une mise à jour du diagramme est recommandée' : 'Le diagramme est à jour';
+      $replace['#icon_tips#'] = $linkschanged == 1 ? 'Un élément du diagramme a été modifié, une mise à jour est recommandée' : 'Le diagramme est à jour';
     } else {
       $replace['#desc#'] = 'Cet objet n\'est associé à aucun groupe';
       $replace['#lastupdate#'] = '';

@@ -350,6 +350,8 @@ class diagrelationnel extends eqLogic {
         log::add(__CLASS__, 'debug', 'Liste des ID déjà parcouru : ' . json_encode($sc_id_checked));
       }
     }
+    $note = '[note: Diagramme relationnel du groupe ' . $selected_group . $note_color . '],'; // Ajout d'une note au diagramme
+    $dsltext = 'dsl_text=' . $note . $dsltext;
     $dsltext = substr($dsltext, 0, -1); // Suppression du dernière caractère (virgule);
     log::add(__CLASS__, 'debug', '>> dsltext : ' . $dsltext);
 
@@ -361,9 +363,7 @@ class diagrelationnel extends eqLogic {
       ///////////////////////////////////////////////
       // Modifier l'image du widget type loading ? //
       ///////////////////////////////////////////////
-      $note = '[note: Diagramme relationnel du groupe ' . $selected_group . $note_color . '],'; // Ajout d'une note au diagramme
-      $dsltext = 'dsl_text=' . $note . $dsltext;
-      //$dsltext = substr($dsltext, 0, -1); // Suppression du dernière caractère (virgule);
+
       log::add(__CLASS__, 'debug', '  dsltext à envoyer : ' . $dsltext);
 
       $result = $this->generate_diagram($dsltext); // Génération du diagramme
@@ -385,7 +385,7 @@ class diagrelationnel extends eqLogic {
           $this->checkAndUpdateCmd('lastupdate', time());
           $this->checkAndUpdateCmd('linkschanged', 0);
           //$this->setConfiguration('relations', json_encode($relations_array));
-          $this->setConfiguration('stored_dsltext', json_encode($dsltext));
+          $this->setConfiguration('stored_dsltext', $dsltext);
           $this->save();
           sleep(2);
           $this->refreshWidget();
@@ -393,6 +393,7 @@ class diagrelationnel extends eqLogic {
       }
     } else {
       $stored_dsltext = $this->getConfiguration('stored_dsltext');
+      //log::add(__CLASS__, 'debug', 'stored_dsltext : ' . $stored_dsltext);
       if ($stored_dsltext == $dsltext) {
         log::add(__CLASS__, 'debug', "Aucune modification dans le diagramme relationnel de l'équipement");
       } else {

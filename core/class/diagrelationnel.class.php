@@ -22,14 +22,14 @@ class diagrelationnel extends eqLogic {
 
   static function setupCron($creation) {
     if ($creation == 1) {
-      // Cron toutes les 15 minutes pour le moment
+      // Cron à 00h30
       $oCron = cron::byClassAndFunction(__CLASS__, 'diagrelationnelCron');
       if (!is_object($oCron)) {
         $oCron = new cron();
         $oCron->setClass('diagrelationnel');
         $oCron->setFunction('diagrelationnelCron');
         $oCron->setEnable(1);
-        $oCron->setSchedule('*/15 * * * *');
+        $oCron->setSchedule('30 0 * * *');
         $oCron->setTimeout('2');
         $oCron->save();
       }
@@ -160,7 +160,7 @@ class diagrelationnel extends eqLogic {
   }
 
   function record_relation($_type, $_fromid, $_fromingroup, $_fromdesc, $_toid, $_toingroup, $_todesc) {
-    // "type_relation" : Relation de type [1 : entre scénarios ; 2 : entre déclencheur et scénario]
+    // "type_relation" : Relation de type [1 : entre scénarios ; 2 : entre "Déclenchement" et scénarios ; 3 : entre "Actions de déclenchement" et scénarios]
     // "from_id" : Id de l'eqLogic l'appelant
     // "from_ingroup" : 1 si l'appelant est dans le groupe analysé, 0 sinon
     // "from_desc" : Description de l'appelant
@@ -179,6 +179,54 @@ class diagrelationnel extends eqLogic {
     return $arr;
   }
 
+  function get_desc_to_dsl($_sc) {
+    // Description du scénario
+    $description = $_sc->getDescription();
+    //log::add(__CLASS__, 'debug', '  Description : ' . $description);
+    $sDeclenchement = $description == '' ? '' : '|' . $description;
+    return $this->cleanstring($sDeclenchement);
+  }
+
+  function get_declenchement_to_dsl($_sc) {
+    // Déclenchements du scénario (ScheduleTrigger)
+    $ScheduleTrigger = '';
+    $schedules = $_sc->getSchedule();
+    if ($_sc->getMode() == 'schedule' || $_sc->getMode() == 'all') {
+      if (is_array($schedules)) {
+        foreach ($schedules as $schedule) {
+          //log::add(__CLASS__, 'debug', '    - Programmation : ' . $schedule);
+          //$relations_array[] = $this->record_relation(3, 0, 0, $schedule, $_sc->getId(), $from_ingroup, '');
+          $ScheduleTrigger .= $schedule . ';';
+        }
+      } else {
+        if ($schedules != '') {
+          //log::add(__CLASS__, 'debug', '    - Programmation : ' . $schedules);
+          //$relations_array[] = $this->record_relation(3, 0, 0, $schedules, $_sc->getId(), $from_ingroup, '');
+          $ScheduleTrigger .= $schedules . ';';
+        }
+      }
+    }
+    if ($_sc->getMode() == 'provoke' || $_sc->getMode() == 'all') {
+      foreach (($_sc->getTrigger()) as $trigger) {
+        if ($trigger != '') {
+          //log::add(__CLASS__, 'debug', '    - Evènement : ' . jeedom::toHumanReadable($trigger));
+          //$relations_array[] = $this->record_relation(3, 0, 0, jeedom::toHumanReadable($trigger), $_sc->getId(), $from_ingroup, '');
+          $ScheduleTrigger .= jeedom::toHumanReadable($trigger) . ';';
+        }
+      }
+    }
+    //log::add(__CLASS__, 'debug', '---- ScheduleTrigger (avant) : ' . $ScheduleTrigger);
+    if ($ScheduleTrigger != '') {
+      $ScheduleTrigger = substr($ScheduleTrigger, 0, -1); // Suppression du dernière caractère (point-virgule);
+      $ScheduleTrigger = '|' . $ScheduleTrigger;
+      //$from_desc .= $ScheduleTrigger;
+    }
+    //log::add(__CLASS__, 'debug', '---- ScheduleTrigger (après) : ' . $ScheduleTrigger);
+    //log::add(__CLASS__, 'debug', '---- ScheduleTrigger : ' . $ScheduleTrigger);
+    return $this->cleanstring($ScheduleTrigger);
+  }
+
+
   public function refreshAll() {
     foreach (eqLogic::byType('diagrelationnel', true) as $eqLogic) {
       if ($eqLogic->getIsEnable()) {
@@ -194,9 +242,6 @@ class diagrelationnel extends eqLogic {
 
     log::add(__CLASS__, 'info', '----------------------------------------------');
     log::add(__CLASS__, 'info', 'Analyse de l\'équipement ' . $this->getName());
-
-    $storedrelations = $this->getConfiguration('relations');
-    log::add(__CLASS__, 'debug', 'storedrelations : ' . $storedrelations);
 
     $selected_group = $this->getConfiguration('cfg_SelectedGroup');
     if ($selected_group == '') {
@@ -217,40 +262,37 @@ class diagrelationnel extends eqLogic {
 
     $dsltext = '';
     $dsl = '';
+    $array_completeinfo = array();
     while (count($sc_id_tocheck) > 0) { // boucle tant qu'il y a des scénarios à parcourir
       foreach ($sc_id_tocheck as $sc_id) {
         $sc_id_checked[] = $sc_id;
         array_shift($sc_id_tocheck); // Retire le premier élément du tableau pour ne pas analyser le scénario à la prochaine boucle
         $from_sc = scenario::byId($sc_id);
         log::add(__CLASS__, 'debug', 'Check ID ' . $sc_id . ' : ' . $from_sc->getHumanName());
-        $description = $this->cleanstring($from_sc->getDescription());
-        log::add(__CLASS__, 'debug', '  Description : ' . $description);
-        $from_desc = $description != '' ? '|' . $description : '';
+
+        $desc_dsl = '';
+        $declenchement_dsl = '';
+        if (!in_array($sc_id, $array_completeinfo)) {
+          log::add(__CLASS__, 'debug', '  Traitement de la description et des declenchements');
+          $desc_dsl = $this->get_desc_to_dsl($from_sc); // Récupération description pour construire dsl
+          $declenchement_dsl = $this->get_declenchement_to_dsl($from_sc); // Récupération déclenchement pour construire dsl
+          log::add(__CLASS__, 'debug', '    ' . $desc_dsl);
+          log::add(__CLASS__, 'debug', '    ' . $declenchement_dsl);
+          $array_completeinfo[] = $sc_id; // Récupération des infos complètes du scénario déjà réalisée (description et déclenchement)
+          log::add(__CLASS__, 'debug', '    Liste des ID dont les infos complètes ont été récupérés : ' . json_encode($array_completeinfo));
+        }
 
         $from_sc_name = $this->cleanstring($from_sc->getHumanName());
         $from_ingroup = $from_sc->getGroup() == $selected_group ? 1 : 0;
-        $from_color = $from_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément source s'il est dans les scénarios du groupe d'origine
+        $couleur_dsl = $from_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément s'il est dans les scénarios du groupe
 
-        // Déclenchements du scénario source (juste des logs pour le moment)
-        $schedules = $from_sc->getSchedule();
-        if ($from_sc->getMode() == 'schedule' || $from_sc->getMode() == 'all') {
-          if (is_array($schedules)) {
-            foreach ($schedules as $schedule) {
-              log::add(__CLASS__, 'debug', '    - Programmation : ' . $schedule);
-            }
-          } else {
-            if ($schedules != '') {
-              log::add(__CLASS__, 'debug', '    - Programmation : ' . $schedules);
-            }
-          }
-        }
-        if ($from_sc->getMode() == 'provoke' || $from_sc->getMode() == 'all') {
-          foreach (($from_sc->getTrigger()) as $trigger) {
-            log::add(__CLASS__, 'debug', '    - Evènement : ' . jeedom::toHumanReadable($trigger));
-          }
-        }
+        $dsl = '[' . $from_sc_name . $desc_dsl . $declenchement_dsl . $couleur_dsl . '],';
+        //$relations_array[] = $this->record_relation(1, $action['cmdId'], 0, '', $from_sc->getId(), 0, '');
+        log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
 
-        // Actions de déclenchement du scénario source
+        $dsltext .= $dsl;
+
+        // Actions de déclenchement du scénario source (definedAction)
         $arr_definedAction = $this->getDefinedAction($sc_id);
         foreach ($arr_definedAction['definedAction'] as $action) {
           log::add(__CLASS__, 'debug', '  Actions de déclenchement : ' . json_encode($action));
@@ -265,28 +307,30 @@ class diagrelationnel extends eqLogic {
             } else {
               $definedAction_type = '';
             }
-            $dsl = '[' . $from_sc_name . $from_desc . $from_color . ']' . '^-.-' . $definedAction_type . '[' . $definedAction_name . $action_color . '],';
-            log::add(__CLASS__, 'debug', '  dsl : ' . $dsl);
+            $dsl = '[' . $from_sc_name . ']' . '^-.-' . $definedAction_type . '[' . $definedAction_name . $action_color . '],';
+            //$relations_array[] = $this->record_relation(3, $action['cmdId'], 0, '', $from_sc->getId(), 0, '');
+            log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
+
             $dsltext .= $dsl;
-            $relations_array[] = $this->record_relation(2, $arr_definedAction['definedAction'][0]['cmdId'], 0, '', $from_sc->getId(), $from_ingroup, $from_desc);
           }
         }
+
 
         // Traitement des scénarios appelés par le scénario source
         $arr_use = $this->get_use($from_sc);
         $json_arr_use = empty($arr_use) ? 'Aucun' : json_encode($arr_use);
         log::add(__CLASS__, 'debug', '  Le scénario appelle ces ID : ' . $json_arr_use);
         foreach ($arr_use as $new_id_to_check) {
-          $to_sc = scenario::byId($new_id_to_check);
+          //$to_sc = scenario::byId($new_id_to_check);
           $to_sc_name = $this->cleanstring(scenario::byId($new_id_to_check)->getHumanName());
-          $description = $this->cleanstring($to_sc->getDescription());
-          $to_desc = $description != '' ? '|' . $description : '';
-          $to_ingroup = scenario::byId($new_id_to_check)->getGroup() == $selected_group ? 1 : 0;
-          $to_color = $to_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément cible s'il est dans les scénarios du groupe d'origine
-          $dsl = '[' . $from_sc_name . $from_desc . $from_color . ']' . '->' . '[' . $to_sc_name . $to_desc . $to_color . '],';
-          log::add(__CLASS__, 'debug', '  dsl : ' . $dsl);
+          //$description = $this->cleanstring($to_sc->getDescription());
+          //$to_desc = $description != '' ? '|' . $description : '';
+          //$to_ingroup = scenario::byId($new_id_to_check)->getGroup() == $selected_group ? 1 : 0;
+          //$to_color = $to_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément cible s'il est dans les scénarios du groupe d'origine          
+          $dsl = '[' . $from_sc_name . ']' . '->' . '[' . $to_sc_name . '],';
+          log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
           $dsltext .= $dsl;
-          $relations_array[] = $this->record_relation(1, $from_sc->getId(), $from_ingroup, $from_desc, $to_sc->getId(), $to_ingroup, $to_desc);
+          //$relations_array[] = $this->record_relation(1, $from_sc->getId(), $from_ingroup, $from_desc, $to_sc->getId(), $to_ingroup, $to_desc);
           if (!in_array($new_id_to_check, $sc_id_checked) && (!in_array($new_id_to_check, $sc_id_tocheck))) {
             $sc_id_tocheck[] = $new_id_to_check;
           }
@@ -306,24 +350,21 @@ class diagrelationnel extends eqLogic {
         log::add(__CLASS__, 'debug', 'Liste des ID déjà parcouru : ' . json_encode($sc_id_checked));
       }
     }
+    $note = '[note: Diagramme relationnel du groupe ' . $selected_group . $note_color . '],'; // Ajout d'une note au diagramme
+    $dsltext = 'dsl_text=' . $note . $dsltext;
+    $dsltext = substr($dsltext, 0, -1); // Suppression du dernière caractère (virgule);
+    log::add(__CLASS__, 'debug', '>> dsltext : ' . $dsltext);
 
-    $relations = json_encode($relations_array);
-    log::add(__CLASS__, 'debug', 'relations : ' . $relations);
-
-    if ($storedrelations == $relations) {
-      log::add(__CLASS__, 'debug', 'Les relations entre les objets ne semblent pas avoir été modifiées pour cet équipement');
-    } else {
-      log::add(__CLASS__, 'info', 'Les relations ont été modifiées et nécéssiteraient de faire la mise à jour de l\'équipement');
-      $this->checkAndUpdateCmd('linkschanged', 1);
-      $this->refreshWidget();
-    }
+    //$relations = json_encode($relations_array);
+    //log::add(__CLASS__, 'debug', 'relations : ' . $relations);
 
     if ($_forceupdate == 1) {
-      log::add(__CLASS__, 'info', 'Mise à jour des relations demandées par l\'utilisateur');
-      $note = '[note: Diagramme relationnel du groupe ' . $selected_group . $note_color . '],'; // Ajout d'une note au diagramme
-      $dsltext = 'dsl_text=' . $note . $dsltext;
-      $dsltext = substr($dsltext, 0, -1); // Suppression du dernière caractère (virgule);
-      log::add(__CLASS__, 'debug', 'dsltext : ' . $dsltext);
+      log::add(__CLASS__, 'info', 'Demande de la mise à jour du diagramme relationnel');
+      ///////////////////////////////////////////////
+      // Modifier l'image du widget type loading ? //
+      ///////////////////////////////////////////////
+
+      log::add(__CLASS__, 'debug', '  dsltext à envoyer : ' . $dsltext);
 
       $result = $this->generate_diagram($dsltext); // Génération du diagramme
       //log::add(__CLASS__, 'debug', 'result : ' . $result);
@@ -340,13 +381,25 @@ class diagrelationnel extends eqLogic {
         if ($resu === FALSE) {
           log::add(__CLASS__, 'error', 'Erreur lors de l\'écriture du fichier dans ' . $file);
         } else {
+          log::add(__CLASS__, 'info', 'Mise à jour effectuée');
           $this->checkAndUpdateCmd('lastupdate', time());
           $this->checkAndUpdateCmd('linkschanged', 0);
-          $this->setConfiguration('relations', json_encode($relations_array));
+          //$this->setConfiguration('relations', json_encode($relations_array));
+          $this->setConfiguration('stored_dsltext', $dsltext);
           $this->save();
           sleep(2);
           $this->refreshWidget();
         }
+      }
+    } else {
+      $stored_dsltext = $this->getConfiguration('stored_dsltext');
+      //log::add(__CLASS__, 'debug', 'stored_dsltext : ' . $stored_dsltext);
+      if ($stored_dsltext == $dsltext) {
+        log::add(__CLASS__, 'debug', "Aucune modification dans le diagramme relationnel de l'équipement");
+      } else {
+        log::add(__CLASS__, 'info', "L'un des éléments du diagramme relationnel a été modifié depuis la dernière mise à jour de l'équipement");
+        $this->checkAndUpdateCmd('linkschanged', 1);
+        $this->refreshWidget();
       }
     }
   }
@@ -529,11 +582,11 @@ class diagrelationnel extends eqLogic {
       if ($this->getCmd('info', 'lastupdate')->execCmd() == '') {
         $replace['#lastupdate#'] = '';
       } else {
-        $replace['#lastupdate#'] = 'Mise à jour : ' . date('d/m/Y h:i:s', $this->getCmd('info', 'lastupdate')->execCmd());
+        $replace['#lastupdate#'] = 'Mise à jour : ' . date('d/m/Y H:i:s', $this->getCmd('info', 'lastupdate')->execCmd());
       }
 
       $replace['#icon_color#'] = $linkschanged == 1 ? 'icon_yellow' : '';
-      $replace['#icon_tips#'] = $linkschanged == 1 ? 'Les relations entre les objets ont été modifiées, une mise à jour du diagramme est recommandée' : 'Le diagramme est à jour';
+      $replace['#icon_tips#'] = $linkschanged == 1 ? 'Un élément du diagramme a été modifié, une mise à jour est recommandée' : 'Le diagramme est à jour';
     } else {
       $replace['#desc#'] = 'Cet objet n\'est associé à aucun groupe';
       $replace['#lastupdate#'] = '';

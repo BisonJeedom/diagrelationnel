@@ -2,7 +2,7 @@ Plugin Jeedom : **Diagramme relationnel (diagrelationnel)**
 
 ---
 
-Ce plugin permet de visualiser la relation de niveau 1 entre les scénarios et les déclencheurs
+Ce plugin permet de visualiser la relation entre les scénarios et différents déclencheurs de premier niveau
 
 ---
 

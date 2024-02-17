@@ -227,6 +227,21 @@ class diagrelationnel extends eqLogic {
     return $this->cleanstring($ScheduleTrigger);
   }
 
+  public function get_desc_and_declenchement($_id, $_array) {
+    $array = $_array;
+    $from_sc = scenario::byId($_id);
+    if (!in_array($_id, $_array['id'])) {
+      log::add(__CLASS__, 'debug', '  Traitement de la description et des declenchements');
+      $desc_dsl = $this->get_desc_to_dsl($from_sc); // Récupération description pour construire dsl
+      $declenchement_dsl = $this->get_declenchement_to_dsl($from_sc); // Récupération déclenchement pour construire dsl
+      log::add(__CLASS__, 'debug', '    ' . $desc_dsl);
+      log::add(__CLASS__, 'debug', '    ' . $declenchement_dsl);
+      $array[] = array('id' => $_id, 'desc' => $desc_dsl, 'declenchement' => $declenchement_dsl);
+      log::add(__CLASS__, 'debug', '    Liste des ID dont les infos complètes ont été récupérés : ' . json_encode($_array));
+    }
+    return $array;
+  }
+
 
   public function refreshAll() {
     foreach (eqLogic::byType('diagrelationnel', true) as $eqLogic) {
@@ -263,41 +278,35 @@ class diagrelationnel extends eqLogic {
 
     $dsltext = '';
     $dsl = '';
-    $array_completeinfo = array();
+
     while (count($sc_id_tocheck) > 0) { // boucle tant qu'il y a des scénarios à parcourir
       foreach ($sc_id_tocheck as $sc_id) {
         $sc_id_checked[] = $sc_id;
         array_shift($sc_id_tocheck); // Retire le premier élément du tableau pour ne pas analyser le scénario à la prochaine boucle
+
         $from_sc = scenario::byId($sc_id);
         log::add(__CLASS__, 'debug', 'Check ID ' . $sc_id . ' : ' . $from_sc->getHumanName());
+        $from_sc_islinked = 0;
 
-        $desc_dsl = '';
-        $declenchement_dsl = '';
-        if (!in_array($sc_id, $array_completeinfo)) {
-          log::add(__CLASS__, 'debug', '  Traitement de la description et des declenchements');
-          $desc_dsl = $this->get_desc_to_dsl($from_sc); // Récupération description pour construire dsl
-          $declenchement_dsl = $this->get_declenchement_to_dsl($from_sc); // Récupération déclenchement pour construire dsl
-          log::add(__CLASS__, 'debug', '    ' . $desc_dsl);
-          log::add(__CLASS__, 'debug', '    ' . $declenchement_dsl);
-          $array_completeinfo[] = $sc_id; // Récupération des infos complètes du scénario déjà réalisée (description et déclenchement)
-          log::add(__CLASS__, 'debug', '    Liste des ID dont les infos complètes ont été récupérés : ' . json_encode($array_completeinfo));
-        }
-
+        log::add(__CLASS__, 'debug', '  Description et declenchements du scénario source');
+        $from_desc_dsl = $this->get_desc_to_dsl($from_sc); // Récupération description pour construire dsl
+        $from_declenchement_dsl = $this->get_declenchement_to_dsl($from_sc); // Récupération déclenchement pour construire dsl
+        log::add(__CLASS__, 'debug', '    ' . $from_desc_dsl);
+        log::add(__CLASS__, 'debug', '    ' . $from_declenchement_dsl);
         $from_sc_name = $this->cleanstring($from_sc->getHumanName());
         $from_ingroup = $from_sc->getGroup() == $selected_group ? 1 : 0;
-        $couleur_dsl = $from_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément s'il est dans les scénarios du groupe
-
-        $dsl = '[' . $from_sc_name . $desc_dsl . $declenchement_dsl . $couleur_dsl . '],';
+        $from_color = $from_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément s'il est dans les scénarios du groupe
+        $from_dsl = '[' . $from_sc_name . $from_desc_dsl . $from_declenchement_dsl . $from_color . ']';
+        //$dsl = '[' . $from_sc_name . $desc_dsl . $declenchement_dsl . $couleur_dsl . '],';
         //$relations_array[] = $this->record_relation(1, $action['cmdId'], 0, '', $from_sc->getId(), 0, '');
-        log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
 
-        $dsltext .= $dsl;
-
+        log::add(__CLASS__, 'debug', '  Actions de declenchement du scénario source');
         // Actions de déclenchement du scénario source (definedAction)
         $arr_definedAction = $this->getDefinedAction($sc_id);
         foreach ($arr_definedAction['definedAction'] as $action) {
-          log::add(__CLASS__, 'debug', '  Actions de déclenchement : ' . json_encode($action));
+          //log::add(__CLASS__, 'debug', '  Actions de déclenchement : ' . json_encode($action));
           if ($action['enable'] == 1) {
+            $from_sc_islinked = 1;
             $definedAction_name = $this->cleanstring($action['name']);
             if ($action['type'] == 'actionCheckCmd') {
               $definedAction_type = 'Action sur valeur';
@@ -308,10 +317,10 @@ class diagrelationnel extends eqLogic {
             } else {
               $definedAction_type = '';
             }
-            $dsl = '[' . $from_sc_name . ']' . '^-.-' . $definedAction_type . '[' . $definedAction_name . $action_color . '],';
+            log::add(__CLASS__, 'debug', '    ' . $definedAction_name . ' de type ' . $definedAction_type);
+            $dsl = $from_dsl . '^-.-' . $definedAction_type . '[' . $definedAction_name . $action_color . '],';
             //$relations_array[] = $this->record_relation(3, $action['cmdId'], 0, '', $from_sc->getId(), 0, '');
             log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
-
             $dsltext .= $dsl;
           }
         }
@@ -322,15 +331,22 @@ class diagrelationnel extends eqLogic {
         $json_arr_use = empty($arr_use) ? 'Aucun' : json_encode($arr_use);
         log::add(__CLASS__, 'debug', '  Le scénario appelle ces ID : ' . $json_arr_use);
         foreach ($arr_use as $new_id_to_check) {
-          //$to_sc = scenario::byId($new_id_to_check);
+          $from_sc_islinked = 1;
+          $to_sc = scenario::byId($new_id_to_check);
+          log::add(__CLASS__, 'debug', '  Traitement de la description et des declenchements');
+          $to_desc_dsl = $this->get_desc_to_dsl($to_sc); // Récupération description pour construire dsl
+          $to_declenchement_dsl = $this->get_declenchement_to_dsl($to_sc); // Récupération déclenchement pour construire dsl
+          log::add(__CLASS__, 'debug', '    ' . $to_desc_dsl);
+          log::add(__CLASS__, 'debug', '    ' . $to_declenchement_dsl);
           $to_sc_name = $this->cleanstring(scenario::byId($new_id_to_check)->getHumanName());
-          //$description = $this->cleanstring($to_sc->getDescription());
-          //$to_desc = $description != '' ? '|' . $description : '';
-          //$to_ingroup = scenario::byId($new_id_to_check)->getGroup() == $selected_group ? 1 : 0;
-          //$to_color = $to_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément cible s'il est dans les scénarios du groupe d'origine          
-          $dsl = '[' . $from_sc_name . ']' . '->' . '[' . $to_sc_name . '],';
+          $to_ingroup = scenario::byId($new_id_to_check)->getGroup() == $selected_group ? 1 : 0;
+          $to_color = $to_ingroup == 1 ? $ingroup_color : '';
+          $to_dsl = '[' . $to_sc_name . $to_desc_dsl . $to_declenchement_dsl . $to_color . ']';
+
+          $dsl = $from_dsl . '->' . $to_dsl . ',';
           log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
           $dsltext .= $dsl;
+
           //$relations_array[] = $this->record_relation(1, $from_sc->getId(), $from_ingroup, $from_desc, $to_sc->getId(), $to_ingroup, $to_desc);
           if (!in_array($new_id_to_check, $sc_id_checked) && (!in_array($new_id_to_check, $sc_id_tocheck))) {
             $sc_id_tocheck[] = $new_id_to_check;
@@ -345,6 +361,12 @@ class diagrelationnel extends eqLogic {
           if (!in_array($new_id_to_check, $sc_id_checked) && (!in_array($new_id_to_check, $sc_id_tocheck))) {
             $sc_id_tocheck[] = $new_id_to_check;
           }
+        }
+
+        if ($from_sc_islinked == 0) {
+          $dsl = $from_dsl . ',';
+          log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
+          $dsltext .= $dsl;
         }
 
         log::add(__CLASS__, 'debug', 'Liste des ID restant à parcourir : ' . json_encode($sc_id_tocheck));

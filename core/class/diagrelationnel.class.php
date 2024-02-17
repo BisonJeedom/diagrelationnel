@@ -288,7 +288,7 @@ class diagrelationnel extends eqLogic {
         log::add(__CLASS__, 'debug', 'Check ID ' . $sc_id . ' : ' . $from_sc->getHumanName());
         $from_sc_islinked = 0;
 
-        log::add(__CLASS__, 'debug', '  Description et declenchements du scénario source');
+        log::add(__CLASS__, 'debug', '  Description et declenchements du scénario source :');
         $from_desc_dsl = $this->get_desc_to_dsl($from_sc); // Récupération description pour construire dsl
         $from_declenchement_dsl = $this->get_declenchement_to_dsl($from_sc); // Récupération déclenchement pour construire dsl
         log::add(__CLASS__, 'debug', '    ' . $from_desc_dsl);
@@ -300,7 +300,7 @@ class diagrelationnel extends eqLogic {
         //$dsl = '[' . $from_sc_name . $desc_dsl . $declenchement_dsl . $couleur_dsl . '],';
         //$relations_array[] = $this->record_relation(1, $action['cmdId'], 0, '', $from_sc->getId(), 0, '');
 
-        log::add(__CLASS__, 'debug', '  Actions de declenchement du scénario source');
+        log::add(__CLASS__, 'debug', '  Actions de declenchement du scénario source :');
         // Actions de déclenchement du scénario source (definedAction)
         $arr_definedAction = $this->getDefinedAction($sc_id);
         foreach ($arr_definedAction['definedAction'] as $action) {
@@ -329,11 +329,11 @@ class diagrelationnel extends eqLogic {
         // Traitement des scénarios appelés par le scénario source
         $arr_use = $this->get_use($from_sc);
         $json_arr_use = empty($arr_use) ? 'Aucun' : json_encode($arr_use);
-        log::add(__CLASS__, 'debug', '  Le scénario appelle ces ID : ' . $json_arr_use);
+        log::add(__CLASS__, 'debug', ' Le scénario appelle ces ID : ' . $json_arr_use);
         foreach ($arr_use as $new_id_to_check) {
           $from_sc_islinked = 1;
           $to_sc = scenario::byId($new_id_to_check);
-          log::add(__CLASS__, 'debug', '  Traitement de la description et des declenchements');
+          log::add(__CLASS__, 'debug', '  Description et declenchements du scénario cible :');
           $to_desc_dsl = $this->get_desc_to_dsl($to_sc); // Récupération description pour construire dsl
           $to_declenchement_dsl = $this->get_declenchement_to_dsl($to_sc); // Récupération déclenchement pour construire dsl
           log::add(__CLASS__, 'debug', '    ' . $to_desc_dsl);
@@ -356,7 +356,7 @@ class diagrelationnel extends eqLogic {
         // Traitement des scénarios qui appellent le scénario source
         $arr_usedBy = $this->get_usedBy($from_sc);
         $json_arr_usedBy = empty($arr_usedBy) ? 'Aucun' : json_encode($arr_usedBy);
-        log::add(__CLASS__, 'debug', '  Le scénario est appelé par ces ID : ' . $json_arr_usedBy);
+        log::add(__CLASS__, 'debug', ' Le scénario est appelé par ces ID : ' . $json_arr_usedBy);
         foreach ($arr_usedBy as $new_id_to_check) {
           if (!in_array($new_id_to_check, $sc_id_checked) && (!in_array($new_id_to_check, $sc_id_tocheck))) {
             $sc_id_tocheck[] = $new_id_to_check;
@@ -364,6 +364,7 @@ class diagrelationnel extends eqLogic {
         }
 
         if ($from_sc_islinked == 0) {
+          log::add(__CLASS__, 'debug', ' Le scénario n\'a aucun lien');
           $dsl = $from_dsl . ',';
           log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
           $dsltext .= $dsl;

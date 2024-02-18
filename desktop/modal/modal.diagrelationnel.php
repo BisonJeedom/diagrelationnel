@@ -26,5 +26,54 @@ if (substr_compare(init('src'), '.png', -strlen('.png')) !== 0) {
 if (strpos(init('src'), 'diagrelationnel') === false) {
     throw new Exception('{{401 - Accès non autorisé}}');
 }
+?>
+  
+<div class="slidecontainer" style="width: 200px;">
+  <input type="range" min="50" max="350" value="75" class="slider" id="myRange" style="background-color: var(--btn-default-color);">
+</div>
 
-echo '<center><img class="img-responsive" src="' . init('src') . '" style="background: var(--objectTxt-color); max-width: 370%;" /></center>';
+<?php
+echo '<center><img id="img-id" class="img-responsive" src="' . init('src') . '" style="background: var(--objectTxt-color); width: 75%; margin-top: 15px" /></center>';
+?>
+
+<style>
+  
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 15px;
+  border-radius: 5px;  
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;  
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%; 
+  background: var(--al-info-color);
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: var(--al-info-color);
+  cursor: pointer;
+}
+
+</style>
+
+<script>
+  var slider = document.getElementById("myRange");
+  // Update the current slider value (each time you drag the slider handle)
+  slider.oninput = function() {
+    document.getElementById("img-id").style.width = this.value + "%";
+  }
+</script>

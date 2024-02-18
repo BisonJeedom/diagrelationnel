@@ -560,6 +560,8 @@ class diagrelationnel extends eqLogic {
     $refresh->setType('info');
     $refresh->setSubType('binary');
     $refresh->save();
+
+    $this->refreshLinks(0);
   }
 
   // Fonction exécutée automatiquement avant la suppression de l'équipement

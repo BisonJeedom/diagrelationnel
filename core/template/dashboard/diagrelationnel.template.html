@@ -23,21 +23,20 @@
             style="max-width:260px; margin-top : 10px; background: var(--objectTxt-color)" />
         <div style="font-size: small; margin-top:10px">#lastupdate#</div>
     </center>
+    <script>
+        if ('#refresh_id#' != '') {
+            $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').on('click', function () {
+                jeedom.cmd.execute({ id: '#refresh_id#' });
+            });
+        } else {
+            $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').remove();
+        }
+
+        $('.displayImage').on('click', function () {
+            $('#md_modal').dialog({
+                title: 'Diagramme relationnel des scénarios du groupe #group_name#'
+            });
+            $('#md_modal').load('index.php?v=d&plugin=diagrelationnel&modal=modal.diagrelationnel&src=' + $(this).attr('src')).dialog('open');
+        });
+    </script>
 </div>
-
-<script>
-    if ('#refresh_id#' != '') {
-        $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').on('click', function () {
-            jeedom.cmd.execute({ id: '#refresh_id#' });
-        });
-    } else {
-        $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').remove();
-    }
-
-    $('.displayImage').on('click', function () {
-        $('#md_modal').dialog({
-            title: 'Diagramme relationnel des scénarios du groupe #group_name#'
-        });
-        $('#md_modal').load('index.php?v=d&plugin=diagrelationnel&modal=modal.diagrelationnel&src=' + $(this).attr('src')).dialog('open');
-    });
-</script>

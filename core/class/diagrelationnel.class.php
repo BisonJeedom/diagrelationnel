@@ -242,6 +242,52 @@ class diagrelationnel extends eqLogic {
     return $array;
   }
 
+  public function get_Plugin_Mode() {
+    //log::add(__CLASS__, 'debug', 'Analyse du plugin Mode');
+    $mode_array =  array();
+    foreach (eqLogic::byType('mode') as $eqLogic) {
+      $eqModeId = $eqLogic->getId();
+      $eqModeName = $eqLogic->getHumanName();
+      //log::add(__CLASS__, 'debug', 'eqLogic ID : ' . $eqModeId);
+      //log::add(__CLASS__, 'debug', 'eqLogic Name : ' . $eqModeName);
+
+      //$existing_mode = array();
+
+      if (is_array($eqLogic->getConfiguration('modes'))) {
+        foreach ($eqLogic->getConfiguration('modes') as $mode_key => $mode) {
+          //$existing_mode[] = $mode['name'];
+          //log::add(__CLASS__, 'debug', 'json value : ' . json_encode($mode));
+          //log::add(__CLASS__, 'debug', 'name : ' . $mode['name']);
+          if (is_array($mode['inAction'])) {
+            foreach ($mode['inAction'] as $inAction_key => $inAction) {
+              //$scenario->setLog('inAction key : ' . $inAction_key);
+              //log::add(__CLASS__, 'debug', 'inAction cmd : ' . $inAction['cmd']);
+              if ($inAction['cmd'] == 'scenario') {
+                //$scenario->setLog('json inAction : ' . json_encode($inAction['options']));
+                $sc_id = $inAction['options']['scenario_id'];
+                //log::add(__CLASS__, 'debug', '  inAction scenario : ' . $sc_id);
+                $mode_array[$sc_id][] = $eqModeId;
+              }
+            }
+          }
+          if (is_array($mode['outAction'])) {
+            foreach ($mode['outAction'] as $outAction_key => $outAction) {
+              //$scenario->setLog('outAction key : ' . $inAction_key);
+              //log::add(__CLASS__, 'debug', 'outAction cmd : ' . $outAction['cmd']);
+              if ($outAction['cmd'] == 'scenario') {
+                //$scenario->setLog('json outAction : ' . json_encode($outAction['options']));
+                $sc_id = $outAction['options']['scenario_id'];
+                //log::add(__CLASS__, 'debug', '  outAction scenario : ' . $sc_id);
+                $mode_array[$sc_id][] = $eqModeId;
+              }
+            }
+          }
+        }
+      }
+    }
+    return $mode_array;
+  }
+
 
   public function refreshAll() {
     foreach (eqLogic::byType('diagrelationnel', true) as $eqLogic) {
@@ -252,11 +298,19 @@ class diagrelationnel extends eqLogic {
   }
 
   public function refreshLinks($_forceupdate = 0) {
-    $ingroup_color = ' {bg:mediumturquoise}'; // couleur des scénarios du groupe source
-    $action_color = ' {bg:wheat}'; // couleur des actions de déclenchement
-    $note_color = ' {bg:palegreen}'; // couleur de la note du diagramme
+    $ingroup_color = ' {bg:' . config::byKey('cfg_ingroup_color', __CLASS__, 'mediumturqoise') . '}'; // couleur des scénarios du groupe source    
+    $action_color = ' {bg:' . config::byKey('cfg_action_color', __CLASS__, 'wheat') . '}'; // couleur des actions de déclenchement
+    $plugin_color = ' {bg:' . config::byKey('cfg_plugin_color', __CLASS__, 'orchid') . '}'; // couleur des plugins
+    $note_color = ' {bg:' . config::byKey('cfg_note_color', __CLASS__, 'palegreen') . '}'; // couleur de la note du diagramme    
+    //log::add(__CLASS__, 'info', 'couleur ingroup : ' . $ingroup_color);
 
     log::add(__CLASS__, 'info', '----------------------------------------------');
+
+    $Relations_Plugin_Mode = $this->get_Plugin_Mode();
+    if (count($Relations_Plugin_Mode) > 0) {
+      log::add(__CLASS__, 'debug', '*** Relation avec le plugin Mode : ' . json_encode($Relations_Plugin_Mode) . ' ***');
+    }
+
     log::add(__CLASS__, 'info', 'Analyse de l\'équipement ' . $this->getName());
 
     $selected_group = $this->getConfiguration('cfg_SelectedGroup');
@@ -322,6 +376,21 @@ class diagrelationnel extends eqLogic {
             //$relations_array[] = $this->record_relation(3, $action['cmdId'], 0, '', $from_sc->getId(), 0, '');
             log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
             $dsltext .= $dsl;
+          }
+        }
+
+        // Déclenchements du scénario source par le plugin Mode
+        if (count($Relations_Plugin_Mode) > 0) {
+          log::add(__CLASS__, 'debug', '  Déclenchement du scénario source par le plugin Mode :');
+          if (isset($Relations_Plugin_Mode[$sc_id])) {
+            foreach ($Relations_Plugin_Mode[$sc_id] as $mode_id) {
+              //$plugin_EqName = $this->cleanstring(eqLogic::byId($Relations_Plugin_Mode[$sc_id])->getHumanName());
+              $plugin_EqName = $this->cleanstring(eqLogic::byId($mode_id)->getHumanName());
+              log::add(__CLASS__, 'debug', '   L\'équipement mode ' . $plugin_EqName . ' appel le scénario source');
+              $dsl = $from_dsl . '^-.-' . '[' . $plugin_EqName . $plugin_color . '],';
+              log::add(__CLASS__, 'debug', '    >dsl : ' . $dsl);
+              $dsltext .= $dsl;
+            }
           }
         }
 

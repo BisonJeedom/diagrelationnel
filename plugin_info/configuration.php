@@ -30,7 +30,7 @@ $colors = array('aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bi
     <div class="form-group">
       <label class="col-md-4 control-label">{{Couleur du scénario qui est dans le groupe}}</label>
       <div class="col-md-4">
-        <input id="input_ingroup_color" type="text" style="background-color: <?php config::byKey('cfg_ingroup_color', 'diagrelationnel', 'mediumturqoise') ?> ;" class="configKey eqLogicAttr form-control" data-l1key="cfg_ingroup_color" placeholder="mediumturqoise" readonly />
+        <input id="input_ingroup_color" type="text" style="background-color: <?php config::byKey('cfg_ingroup_color', 'diagrelationnel', 'mediumturquoise') ?> ;" class="configKey eqLogicAttr form-control" data-l1key="cfg_ingroup_color" placeholder="mediumturquoise" readonly />
       </div>
       <div class="col-md-4">
         <div id="sel_ingroup_color" class="sel">

@@ -252,9 +252,10 @@ class diagrelationnel extends eqLogic {
   }
 
   public function refreshLinks($_forceupdate = 0) {
-    $ingroup_color = ' {bg:mediumturquoise}'; // couleur des scénarios du groupe source
-    $action_color = ' {bg:wheat}'; // couleur des actions de déclenchement
-    $note_color = ' {bg:palegreen}'; // couleur de la note du diagramme
+    $ingroup_color = ' {bg:' . config::byKey('cfg_ingroup_color', __CLASS__, 'mediumturqoise') . '}'; // couleur des scénarios du groupe source    
+    $action_color = ' {bg:' . config::byKey('cfg_action_color', __CLASS__, 'wheat') . '}'; // couleur des actions de déclenchement
+    $note_color = ' {bg:' . config::byKey('cfg_note_color', __CLASS__, 'palegreen') . '}'; // couleur de la note du diagramme
+    //log::add(__CLASS__, 'info', 'couleur ingroup : ' . $ingroup_color);
 
     log::add(__CLASS__, 'info', '----------------------------------------------');
     log::add(__CLASS__, 'info', 'Analyse de l\'équipement ' . $this->getName());

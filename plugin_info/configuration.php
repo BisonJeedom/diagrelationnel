@@ -64,9 +64,27 @@ $colors = array('aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bi
       </div>
     </div>
     <div class="form-group">
+      <label class="col-md-4 control-label">{{Couleur des plugins}}</label>
+      <div class="col-md-4">
+        <input id="input_plugin_color" type="text" class="configKey eqLogicAttr form-control" data-l1key="cfg_plugin_color" placeholder="palegreen" readonly />
+      </div>
+      <div class="col-md-4">
+        <div id="sel_plugin_color" class="sel">
+          <div id="label_plugin_color" class="label">Selectionner une autre couleur</div>
+          <div id="options_plugin_color" class="options">
+            <?php
+            foreach ($colors as $color) {
+              echo '<div style="background-color: ' . $color . ';">' . $color . '</div>';
+            }
+            ?>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
       <label class="col-md-4 control-label">{{Couleur des notes}}</label>
       <div class="col-md-4">
-        <input id="input_note_color" type="text" class="configKey eqLogicAttr form-control" data-l1key="cfg_note_color" placeholder="palegreen" readonly />
+        <input id="input_note_color" type="text" class="configKey eqLogicAttr form-control" data-l1key="cfg_note_color" placeholder="orchid" readonly />
       </div>
       <div class="col-md-4">
         <div id="sel_note_color" class="sel">
@@ -136,6 +154,33 @@ $colors = array('aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bi
         }
       });
       document.getElementById('options_action_color').setAttribute('hidden', true);
+    }
+  });
+
+  // plugin_color
+  document.getElementById('options_plugin_color').setAttribute('hidden', true);
+
+  document.getElementById('sel_plugin_color').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('options_plugin_color').removeAttribute('hidden');
+  });
+
+  document.getElementById('options_plugin_color').addEventListener('click', (e) => {
+    document.getElementById('options_plugin_color').setAttribute('hidden', true);
+  });
+
+  document.getElementById('options_plugin_color').addEventListener('click', (e) => {
+    if (e.target.tagName === 'DIV') {
+      e.stopPropagation();
+      document.getElementById('label_plugin_color').textContent = e.target.textContent;
+      e.target.classList.add('selected');
+      document.getElementById("input_plugin_color").value = e.target.textContent;
+      Array.from(e.target.parentNode.children).forEach((child) => {
+        if (child !== e.target) {
+          child.classList.remove('selected');
+        }
+      });
+      document.getElementById('options_plugin_color').setAttribute('hidden', true);
     }
   });
 

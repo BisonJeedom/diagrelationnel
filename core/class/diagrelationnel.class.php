@@ -298,7 +298,7 @@ class diagrelationnel extends eqLogic {
   }
 
   public function refreshLinks($_forceupdate = 0) {
-    $ingroup_color = ' {bg:' . config::byKey('cfg_ingroup_color', __CLASS__, 'mediumturqoise') . '}'; // couleur des scénarios du groupe source    
+    $ingroup_color = ' {bg:' . config::byKey('cfg_ingroup_color', __CLASS__, 'mediumturquoise') . '}'; // couleur des scénarios du groupe source    
     $action_color = ' {bg:' . config::byKey('cfg_action_color', __CLASS__, 'wheat') . '}'; // couleur des actions de déclenchement
     $plugin_color = ' {bg:' . config::byKey('cfg_plugin_color', __CLASS__, 'orchid') . '}'; // couleur des plugins
     $note_color = ' {bg:' . config::byKey('cfg_note_color', __CLASS__, 'palegreen') . '}'; // couleur de la note du diagramme    

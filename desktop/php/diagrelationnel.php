@@ -128,8 +128,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-cogs"></i> {{Paramètres spécifiques}}</legend>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Groupe}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le groupe à prendre en compte}}"></i></sup>
+								<label class="col-sm-4 control-label">{{Groupe à analyser}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le groupe à analyser}}"></i></sup>
 								</label>
 								<div class="col-sm-6">
 									<select id="select_Group" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="cfg_SelectedGroup">
@@ -139,7 +139,25 @@ $eqLogics = eqLogic::byType($plugin->getId());
 											foreach ($scenarioListGroup as $group) {
 												echo '<option value="' . $group['group'] . '">' . $group['group'] . '</option>';
 											}
-											$hasScenario = true;
+											//$hasScenario = true;
+										}
+										?>
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Groupe à exclure (optionnel)}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez, au besoin, le groupe à ne pas prendre en compte}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<select id="select_ExcludedGroup" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="cfg_ExcludedGroup">
+										<?php
+										$scenarioListGroup = scenario::listGroup();
+										if (is_array($scenarioListGroup)) {
+											foreach ($scenarioListGroup as $group) {
+												echo '<option value="' . $group['group'] . '">' . $group['group'] . '</option>';
+											}
+											//$hasScenario = true;
 										}
 										?>
 									</select>

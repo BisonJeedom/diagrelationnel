@@ -314,10 +314,18 @@ class diagrelationnel extends eqLogic {
     log::add(__CLASS__, 'info', 'Analyse de l\'équipement ' . $this->getName());
 
     $selected_group = $this->getConfiguration('cfg_SelectedGroup');
+    $excluded_group = $this->getConfiguration('cfg_ExcludedGroup');
     if ($selected_group == '') {
       log::add(__CLASS__, 'warning', 'Cet équipement n\'a aucun groupe défini, abandon du traitement');
       return;
     }
+    if ($selected_group == $excluded_group) {
+      log::add(__CLASS__, 'warning', 'Le groupe à ne pas prendre en compte ne peut pas être le même que le groupe défini, abandon du traitement');
+      return;
+    }
+
+    $sc_id_tocheck = array();
+    $sc_id_excluded = array();
 
     log::add(__CLASS__, 'info', 'Analyse des scénarios du groupe ' . $selected_group);
     $scenarios = scenario::allOrderedByGroupObjectName();
@@ -325,6 +333,10 @@ class diagrelationnel extends eqLogic {
       if ($sc->getGroup() == $selected_group) {
         log::add(__CLASS__, 'info', '  ' . $sc->getHumanName());
         $sc_id_tocheck[] = $sc->getId();
+      }
+      if ($sc->getGroup() == $excluded_group) {
+        log::add(__CLASS__, 'info', '  ' . $sc->getHumanName() . ' est à exclure');
+        $sc_id_excluded[] = $sc->getId();
       }
     }
     log::add(__CLASS__, 'debug', 'Liste des ID : ' . json_encode($sc_id_tocheck));
@@ -339,14 +351,17 @@ class diagrelationnel extends eqLogic {
         array_shift($sc_id_tocheck); // Retire le premier élément du tableau pour ne pas analyser le scénario à la prochaine boucle
 
         $from_sc = scenario::byId($sc_id);
-        log::add(__CLASS__, 'debug', 'Check ID ' . $sc_id . ' : ' . $from_sc->getHumanName());
         $from_sc_islinked = 0;
 
+        log::add(__CLASS__, 'debug', 'Check ID ' . $sc_id . ' : ' . $from_sc->getHumanName());
         log::add(__CLASS__, 'debug', '  Description et declenchements du scénario source :');
+
         $from_desc_dsl = $this->get_desc_to_dsl($from_sc); // Récupération description pour construire dsl
         $from_declenchement_dsl = $this->get_declenchement_to_dsl($from_sc); // Récupération déclenchement pour construire dsl
+
         log::add(__CLASS__, 'debug', '    ' . $from_desc_dsl);
         log::add(__CLASS__, 'debug', '    ' . $from_declenchement_dsl);
+
         $from_sc_name = $this->cleanstring($from_sc->getHumanName());
         $from_ingroup = $from_sc->getGroup() == $selected_group ? 1 : 0;
         $from_color = $from_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément s'il est dans les scénarios du groupe
@@ -398,8 +413,12 @@ class diagrelationnel extends eqLogic {
         // Traitement des scénarios appelés par le scénario source
         $arr_use = $this->get_use($from_sc);
         $json_arr_use = empty($arr_use) ? 'Aucun' : json_encode($arr_use);
-        log::add(__CLASS__, 'debug', ' Le scénario appelle ces ID : ' . $json_arr_use);
+        log::add(__CLASS__, 'debug', ' Le scénario appelle ces ID : ' . $json_arr_use);        
         foreach ($arr_use as $new_id_to_check) {
+          if (in_array($new_id_to_check, $sc_id_excluded)) {
+            log::add(__CLASS__, 'debug', '  ! Par paramétrage le scénario ' . $new_id_to_check . ' est dans un groupe à ne pas prendre en compte');  
+            continue;
+          }
           $from_sc_islinked = 1;
           $to_sc = scenario::byId($new_id_to_check);
           log::add(__CLASS__, 'debug', '  Description et declenchements du scénario cible :');
@@ -427,6 +446,10 @@ class diagrelationnel extends eqLogic {
         $json_arr_usedBy = empty($arr_usedBy) ? 'Aucun' : json_encode($arr_usedBy);
         log::add(__CLASS__, 'debug', ' Le scénario est appelé par ces ID : ' . $json_arr_usedBy);
         foreach ($arr_usedBy as $new_id_to_check) {
+          if (in_array($new_id_to_check, $sc_id_excluded)) {
+            log::add(__CLASS__, 'debug', '  ! Par paramétrage le scénario ' . $new_id_to_check . ' est dans un groupe à ne pas prendre en compte');  
+            continue;
+          }
           if (!in_array($new_id_to_check, $sc_id_checked) && (!in_array($new_id_to_check, $sc_id_tocheck))) {
             $sc_id_tocheck[] = $new_id_to_check;
           }

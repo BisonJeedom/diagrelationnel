@@ -139,7 +139,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 											foreach ($scenarioListGroup as $group) {
 												echo '<option value="' . $group['group'] . '">' . $group['group'] . '</option>';
 											}
-											//$hasScenario = true;
 										}
 										?>
 									</select>
@@ -157,10 +156,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
 											foreach ($scenarioListGroup as $group) {
 												echo '<option value="' . $group['group'] . '">' . $group['group'] . '</option>';
 											}
-											//$hasScenario = true;
 										}
 										?>
 									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Coloriser les scénarios inactifs en gris}}</label>
+								<div class="col-sm-6">
+									<input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="cfg_checkinactive">
 								</div>
 							</div>
 						</div>

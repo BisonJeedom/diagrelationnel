@@ -22,7 +22,7 @@ if (!isConnect()) {
   include_file('desktop', '404', 'php');
   die();
 }
-$colors = array('aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bisque', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornsilk', 'crimson', 'cyan', 'darkgoldenrod', 'darkorange', 'darkorchid', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkviolet', 'deeppink', 'deepskyblue', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen', 'gainsboro', 'ghostwhite', 'gold', 'goldenrod', 'gray', 'green', 'greenyellow', 'honeydew', 'hotpink', 'indianred', 'khaki', 'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan', 'lightgray', 'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray', 'lightsteelblue', 'lightyellow', 'limegreen', 'linen', 'magenta', 'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'mistyrose', 'moccasin', 'navajowhite', 'oldlace', 'olivedrab', 'orange', 'orangered', 'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'purple', 'red', 'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'skyblue', 'slateblue', 'slategray', 'snow', 'springgreen', 'steelblue', 'tan', 'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke', 'yellow', 'yellowgreen');
+$colors = array('aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bisque', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornsilk', 'crimson', 'cyan', 'darkgoldenrod', 'darkorange', 'darkorchid', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkviolet', 'deeppink', 'deepskyblue', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen', 'ghostwhite', 'gold', 'goldenrod', 'gray', 'green', 'greenyellow', 'honeydew', 'hotpink', 'indianred', 'khaki', 'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan', 'lightgray', 'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray', 'lightsteelblue', 'lightyellow', 'limegreen', 'linen', 'magenta', 'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'mistyrose', 'moccasin', 'navajowhite', 'oldlace', 'olivedrab', 'orange', 'orangered', 'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'purple', 'red', 'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'skyblue', 'slateblue', 'slategray', 'snow', 'springgreen', 'steelblue', 'tan', 'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke', 'yellow', 'yellowgreen');
 
 ?>
 <form class="form-horizontal">
@@ -66,7 +66,7 @@ $colors = array('aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bi
     <div class="form-group">
       <label class="col-md-4 control-label">{{Couleur des plugins}}</label>
       <div class="col-md-4">
-        <input id="input_plugin_color" type="text" class="configKey eqLogicAttr form-control" data-l1key="cfg_plugin_color" placeholder="palegreen" readonly />
+        <input id="input_plugin_color" type="text" class="configKey eqLogicAttr form-control" data-l1key="cfg_plugin_color" placeholder="orchid" readonly />
       </div>
       <div class="col-md-4">
         <div id="sel_plugin_color" class="sel">
@@ -84,7 +84,7 @@ $colors = array('aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bi
     <div class="form-group">
       <label class="col-md-4 control-label">{{Couleur des notes}}</label>
       <div class="col-md-4">
-        <input id="input_note_color" type="text" class="configKey eqLogicAttr form-control" data-l1key="cfg_note_color" placeholder="orchid" readonly />
+        <input id="input_note_color" type="text" class="configKey eqLogicAttr form-control" data-l1key="cfg_note_color" placeholder="palegreen" readonly />
       </div>
       <div class="col-md-4">
         <div id="sel_note_color" class="sel">

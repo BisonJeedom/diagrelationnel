@@ -300,9 +300,15 @@ class diagrelationnel extends eqLogic {
   public function refreshLinks($_forceupdate = 0) {
     $ingroup_color = ' {bg:' . config::byKey('cfg_ingroup_color', __CLASS__, 'mediumturquoise') . '}'; // couleur des scénarios du groupe source    
     $action_color = ' {bg:' . config::byKey('cfg_action_color', __CLASS__, 'wheat') . '}'; // couleur des actions de déclenchement
-    $plugin_color = ' {bg:' . config::byKey('cfg_plugin_color', __CLASS__, 'orchid') . '}'; // couleur des plugins
-    $note_color = ' {bg:' . config::byKey('cfg_note_color', __CLASS__, 'palegreen') . '}'; // couleur de la note du diagramme    
-    //log::add(__CLASS__, 'info', 'couleur ingroup : ' . $ingroup_color);
+    $plugin_color = ' {bg:' . config::byKey('cfg_plugin_color', __CLASS__, 'orchid') . '}'; // couleur des plugins   
+    $note_color = ' {bg:' . config::byKey('cfg_note_color', __CLASS__, 'palegreen') . '}'; // couleur de la note du diagramme
+    $inactive_color = ' {bg:gainsboro}'; // couleur des scénarios inactifs
+
+    $selected_group = $this->getConfiguration('cfg_SelectedGroup');
+    $excluded_group = $this->getConfiguration('cfg_ExcludedGroup');
+    $cfg_checkinactive = $this->getConfiguration('cfg_checkinactive', 0);
+
+    log::add(__CLASS__, 'info', 'excluded_group : ' . $excluded_group);
 
     log::add(__CLASS__, 'info', '----------------------------------------------');
 
@@ -313,8 +319,7 @@ class diagrelationnel extends eqLogic {
 
     log::add(__CLASS__, 'info', 'Analyse de l\'équipement ' . $this->getName());
 
-    $selected_group = $this->getConfiguration('cfg_SelectedGroup');
-    $excluded_group = $this->getConfiguration('cfg_ExcludedGroup');
+
     if ($selected_group == '') {
       log::add(__CLASS__, 'warning', 'Cet équipement n\'a aucun groupe défini, abandon du traitement');
       return;
@@ -365,6 +370,10 @@ class diagrelationnel extends eqLogic {
         $from_sc_name = $this->cleanstring($from_sc->getHumanName());
         $from_ingroup = $from_sc->getGroup() == $selected_group ? 1 : 0;
         $from_color = $from_ingroup == 1 ? $ingroup_color : ''; // Colorisation de l'élément s'il est dans les scénarios du groupe
+        if ($cfg_checkinactive == 1 && $from_sc->getIsActive() == 0) {
+          log::add(__CLASS__, 'debug', '  Ce scénario est inactif');
+          $from_color = $from_sc->getIsActive() == 0 ? $inactive_color : $from_color; // Colorisation différente de l'élément inactif
+        }
         $from_dsl = '[' . $from_sc_name . $from_desc_dsl . $from_declenchement_dsl . $from_color . ']';
         //$dsl = '[' . $from_sc_name . $desc_dsl . $declenchement_dsl . $couleur_dsl . '],';
         //$relations_array[] = $this->record_relation(1, $action['cmdId'], 0, '', $from_sc->getId(), 0, '');
@@ -413,10 +422,10 @@ class diagrelationnel extends eqLogic {
         // Traitement des scénarios appelés par le scénario source
         $arr_use = $this->get_use($from_sc);
         $json_arr_use = empty($arr_use) ? 'Aucun' : json_encode($arr_use);
-        log::add(__CLASS__, 'debug', ' Le scénario appelle ces ID : ' . $json_arr_use);        
+        log::add(__CLASS__, 'debug', ' Le scénario appelle ces ID : ' . $json_arr_use);
         foreach ($arr_use as $new_id_to_check) {
           if (in_array($new_id_to_check, $sc_id_excluded)) {
-            log::add(__CLASS__, 'debug', '  ! Par paramétrage le scénario ' . $new_id_to_check . ' est dans un groupe à ne pas prendre en compte');  
+            log::add(__CLASS__, 'debug', '  ! Par paramétrage le scénario ' . $new_id_to_check . ' est dans un groupe à ne pas prendre en compte');
             continue;
           }
           $from_sc_islinked = 1;
@@ -429,6 +438,10 @@ class diagrelationnel extends eqLogic {
           $to_sc_name = $this->cleanstring(scenario::byId($new_id_to_check)->getHumanName());
           $to_ingroup = scenario::byId($new_id_to_check)->getGroup() == $selected_group ? 1 : 0;
           $to_color = $to_ingroup == 1 ? $ingroup_color : '';
+          if ($cfg_checkinactive == 1 && $to_sc->getIsActive() == 0) {
+            log::add(__CLASS__, 'debug', '  Ce scénario est inactif');
+            $to_color = $to_sc->getIsActive() == 0 ? $inactive_color : $to_color; // Colorisation différente de l'élément inactif
+          }
           $to_dsl = '[' . $to_sc_name . $to_desc_dsl . $to_declenchement_dsl . $to_color . ']';
 
           $dsl = $from_dsl . '->' . $to_dsl . ',';
@@ -447,7 +460,7 @@ class diagrelationnel extends eqLogic {
         log::add(__CLASS__, 'debug', ' Le scénario est appelé par ces ID : ' . $json_arr_usedBy);
         foreach ($arr_usedBy as $new_id_to_check) {
           if (in_array($new_id_to_check, $sc_id_excluded)) {
-            log::add(__CLASS__, 'debug', '  ! Par paramétrage le scénario ' . $new_id_to_check . ' est dans un groupe à ne pas prendre en compte');  
+            log::add(__CLASS__, 'debug', '  ! Par paramétrage le scénario ' . $new_id_to_check . ' est dans un groupe à ne pas prendre en compte');
             continue;
           }
           if (!in_array($new_id_to_check, $sc_id_checked) && (!in_array($new_id_to_check, $sc_id_tocheck))) {

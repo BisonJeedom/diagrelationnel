@@ -162,7 +162,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Coloriser les scénarios inactifs en gris}}</label>
+								<label class="col-sm-4 control-label">{{Coloriser les scénarios inactifs}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Les scénarios inactifs seront affichés en gris}}"></i></sup>
+								</label>
 								<div class="col-sm-6">
 									<input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="cfg_checkinactive">
 								</div>
@@ -170,7 +172,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						</div>
 
 						<!-- Partie droite de l'onglet "Équipement" -->
-						<!-- Affiche un champ de commentaire par défaut mais vous pouvez y mettre ce que vous voulez -->
+						<!-- Affiche un champ de commentaire -->
 						<div class="col-lg-6">
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">

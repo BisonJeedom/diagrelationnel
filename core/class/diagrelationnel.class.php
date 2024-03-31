@@ -82,6 +82,7 @@ class diagrelationnel extends eqLogic {
 
   function get_use($_sc) {
     $use = $_sc->getUse();
+    $arr = array();
     foreach ($use['scenario'] as $scenarioLink) {
       if ($scenarioLink->getId() == $_sc->getId()) {
         continue;
@@ -93,6 +94,7 @@ class diagrelationnel extends eqLogic {
 
   function get_usedBy($_sc) {
     $usedBy = $_sc->getUsedBy();
+    $arr = array();
     foreach ($usedBy['scenario'] as $scenarioLink) {
       if ($scenarioLink->getId() == $_sc->getId()) {
         continue;
@@ -128,32 +130,36 @@ class diagrelationnel extends eqLogic {
         } catch (Exception $e) {
         }
       }
-      foreach ($cmdArray['configuration']['jeedomPreExecCmd'] as $actionCmd) {
-        try {
-          if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
-            $action = array(
-              'cmdId' => $cmd->getId(),
-              'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
-              'enable' => $actionCmd['options']['enable'],
-              'type' => 'jeedomPreExecCmd'
-            );
-            array_push($return['definedAction'], $action);
+      if (isset($cmdArray['configuration']['jeedomPreExecCmd'])) {
+        foreach ($cmdArray['configuration']['jeedomPreExecCmd'] as $actionCmd) {
+          try {
+            if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
+              $action = array(
+                'cmdId' => $cmd->getId(),
+                'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
+                'enable' => $actionCmd['options']['enable'],
+                'type' => 'jeedomPreExecCmd'
+              );
+              array_push($return['definedAction'], $action);
+            }
+          } catch (Exception $e) {
           }
-        } catch (Exception $e) {
         }
       }
-      foreach ($cmdArray['configuration']['jeedomPostExecCmd'] as $actionCmd) {
-        try {
-          if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
-            $action = array(
-              'cmdId' => $cmd->getId(),
-              'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
-              'enable' => $actionCmd['options']['enable'],
-              'type' => 'jeedomPostExecCmd'
-            );
-            array_push($return['definedAction'], $action);
+      if (isset($cmdArray['configuration']['jeedomPostExecCmd'])) {
+        foreach ($cmdArray['configuration']['jeedomPostExecCmd'] as $actionCmd) {
+          try {
+            if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
+              $action = array(
+                'cmdId' => $cmd->getId(),
+                'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
+                'enable' => $actionCmd['options']['enable'],
+                'type' => 'jeedomPostExecCmd'
+              );
+              array_push($return['definedAction'], $action);
+            }
+          } catch (Exception $e) {
           }
-        } catch (Exception $e) {
         }
       }
     }

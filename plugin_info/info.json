@@ -17,8 +17,7 @@
 	"documentation_beta": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/index_beta.md",
 	"documentation": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/index_stable.md",
 	"link": {
-		"forum": "Lien vers le forum",
-		"video": "Lien vers une video"
+		"forum": "Lien vers le forum"
 	},
 	"language": [
 		"fr_FR"

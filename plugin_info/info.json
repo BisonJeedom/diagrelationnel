@@ -12,10 +12,10 @@
 	"hasDependency": false,
 	"hasOwnDeamon": false,
 	"maxDependancyInstallTime": 0,
-	"changelog_beta": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel\/beta\/changelog",
-	"changelog": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel\/changelog",
-	"documentation_beta": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel\/beta",
-	"documentation": "https:\/\/doc.jeedom.com\/#language#\/plugins\/organization\/diagrelationnel",
+	"changelog_beta": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/changelog_beta.md",
+	"changelog": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/changelog_stable.md",
+	"documentation_beta": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/index_beta.md",
+	"documentation": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/index_stable.md",
 	"link": {
 		"forum": "Lien vers le forum",
 		"video": "Lien vers une video"

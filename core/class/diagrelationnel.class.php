@@ -266,10 +266,8 @@ class diagrelationnel extends eqLogic {
           //log::add(__CLASS__, 'debug', 'name : ' . $mode['name']);
           if (is_array($mode['inAction'])) {
             foreach ($mode['inAction'] as $inAction_key => $inAction) {
-              //$scenario->setLog('inAction key : ' . $inAction_key);
               //log::add(__CLASS__, 'debug', 'inAction cmd : ' . $inAction['cmd']);
               if ($inAction['cmd'] == 'scenario') {
-                //$scenario->setLog('json inAction : ' . json_encode($inAction['options']));
                 $sc_id = $inAction['options']['scenario_id'];
                 //log::add(__CLASS__, 'debug', '  inAction scenario : ' . $sc_id);
                 $mode_array[$sc_id][] = $eqModeId;
@@ -278,10 +276,8 @@ class diagrelationnel extends eqLogic {
           }
           if (is_array($mode['outAction'])) {
             foreach ($mode['outAction'] as $outAction_key => $outAction) {
-              //$scenario->setLog('outAction key : ' . $inAction_key);
               //log::add(__CLASS__, 'debug', 'outAction cmd : ' . $outAction['cmd']);
               if ($outAction['cmd'] == 'scenario') {
-                //$scenario->setLog('json outAction : ' . json_encode($outAction['options']));
                 $sc_id = $outAction['options']['scenario_id'];
                 //log::add(__CLASS__, 'debug', '  outAction scenario : ' . $sc_id);
                 $mode_array[$sc_id][] = $eqModeId;

@@ -33,7 +33,7 @@
         }
 
         if (typeof jeeFrontEnd !== 'undefined' && jeeFrontEnd.jeedomVersion !== 'undefined' && jeeFrontEnd.jeedomVersion > '4.4.0') {
-            document.querySelector('.displayImage')?.addEventListener('click', function (event) {
+            document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .displayImage')?.addEventListener('click', function (event) {
                 jeeDialog.dialog({
                     id: 'md_diagrelationnel',
                     title: 'Diagramme relationnel des scénarios du groupe #group_name#',

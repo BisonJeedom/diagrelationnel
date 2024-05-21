@@ -17,7 +17,7 @@
 	"documentation_beta": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/index_beta.md",
 	"documentation": "https://github.com/BisonJeedom/documentations/blob/main/diagrelationnel/index_stable.md",
 	"link": {
-		"forum": "Lien vers le forum"
+		"forum": "https://community.jeedom.com/t/plugin-diagramme-relationnel-actualites/121328"
 	},
 	"language": [
 		"fr_FR"

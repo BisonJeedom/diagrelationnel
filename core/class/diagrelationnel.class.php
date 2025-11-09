@@ -291,10 +291,11 @@ class diagrelationnel extends eqLogic {
   }
 
 
-  public function refreshAll() {
-    foreach (eqLogic::byType('diagrelationnel', true) as $eqLogic) {
-      if ($eqLogic->getIsEnable()) {
-        $eqLogic->refreshLinks(0);
+  public static function refreshAll() {
+    /** @var diagrelationnel $eqL */
+    foreach (eqLogic::byType('diagrelationnel', true) as $eqL) {
+      if ($eqL->getIsEnable()) {
+        $eqL->refreshLinks(0);
       }
     }
   }

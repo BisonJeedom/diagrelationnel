@@ -501,8 +501,15 @@ class diagrelationnel extends eqLogic {
       $result = $this->generate_diagram($dsltext); // Génération du diagramme
       //log::add(__CLASS__, 'debug', 'result : ' . $result);
 
-      $url = 'https://yuml.me/' . substr($result, 0, -4) . '.png';  // URL du fichier au format png      
-      $response = $this->get_diagram($url); // Récupération du diagramme
+      if (substr($result, -3) == 'png') {
+        //$url = 'https://yuml.me/' . $result;  // URL du fichier au format svg
+        $url = 'https://yuml.me/' . substr($result, 0, -4) . '.png';  // URL du fichier au format png  
+        log::add(__CLASS__, 'debug', '  get_diagram with ' . $url);
+        $response = $this->get_diagram($url); // Récupération du diagramme
+      } else {
+        log::add(__CLASS__, 'error', 'Erreur lors de la génération du diagramme');
+        $response = null;
+      }
 
       if ($response === null) {
         log::add(__CLASS__, 'error', 'Erreur lors de la récupération du diagramme à l\'adresse ' . $url);

@@ -501,9 +501,9 @@ class diagrelationnel extends eqLogic {
       $result = $this->generate_diagram($dsltext); // Génération du diagramme
       //log::add(__CLASS__, 'debug', 'result : ' . $result);
 
-      if (substr($result, -3) == 'png') {
-        //$url = 'https://yuml.me/' . $result;  // URL du fichier au format svg
-        $url = 'https://yuml.me/' . substr($result, 0, -4) . '.png';  // URL du fichier au format png  
+      if (substr($result, -3) == 'svg') {
+        $url = 'https://yuml.me/' . $result;  // URL du fichier au format svg
+        //$url = 'https://yuml.me/' . substr($result, 0, -4) . '.png';  // URL du fichier au format png  
         log::add(__CLASS__, 'debug', '  get_diagram with ' . $url);
         $response = $this->get_diagram($url); // Récupération du diagramme
       } else {
@@ -515,7 +515,7 @@ class diagrelationnel extends eqLogic {
         log::add(__CLASS__, 'error', 'Erreur lors de la récupération du diagramme à l\'adresse ' . $url);
       } else {
         $filename = $this->getId();
-        $file = '/var/www/html/plugins/diagrelationnel/data/' . $filename . '.png';
+        $file = '/var/www/html/plugins/diagrelationnel/data/' . $filename . '.svg';
         $resu = file_put_contents($file, $response);
         if ($resu === FALSE) {
           log::add(__CLASS__, 'error', 'Erreur lors de l\'écriture du fichier dans ' . $file);
@@ -715,10 +715,12 @@ class diagrelationnel extends eqLogic {
     $selected_group = $this->getConfiguration('cfg_SelectedGroup');
     if ($selected_group != '') {
       $dir = '/var/www/html/plugins/diagrelationnel/data';
-      $filename = $this->getId() . '.png';
+      $filename = $this->getId() . '.svg';
       $linkschanged = $this->getCmd('info', 'linkschanged')->execCmd();
       $replace['#group_name#'] = $selected_group;
-      $replace['#url#'] = 'core/php/downloadFile.php?pathfile=' . urlencode($dir . '/' . $filename);
+      //$replace['#url#'] = 'core/php/downloadFile.php?pathfile=' . urlencode($dir . '/' . $filename);      
+      $replace['#svg#'] = file_get_contents($dir . '/' . $filename);
+
       if ($this->getComment() == '') {
         $replace['#desc#'] = '';
       } else {

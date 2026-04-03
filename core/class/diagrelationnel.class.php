@@ -108,6 +108,8 @@ class diagrelationnel extends eqLogic {
     $str = str_replace('[', '［', $_str);
     $str = str_replace(']', '］', $str);
     $str = str_replace('&', '＆', $str);
+    $str = str_replace('>', '＞', $str);
+    $str = str_replace('<', '＜', $str);
     return $str;
   }
 

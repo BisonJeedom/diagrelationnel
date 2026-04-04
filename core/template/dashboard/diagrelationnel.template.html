@@ -19,18 +19,21 @@
     </div>
     <center>
         <span>#desc#</span>
-        <div id="svgToolBar#id#" style="text-align:center; margin-bottom:5px;">
+        <div id="svgToolBar#id#" style="text-align:center; margin-bottom: 5px;">
             <button class="btn btn-default btn-xs" id="zoomIn#id#">+</button>
             <button class="btn btn-default btn-xs" id="zoomOut#id#">–</button>
             <button class="btn btn-default btn-xs" id="reset#id#">Reset</button>
-            <input type="range" id="zoomSlider#id#" min="0.05" max="100" step="0.05" value="0.8" style="width:120px;">
+            <div style="display:flex; justify-content:space-between; margin-top: 10px;">
+                <input type="range" id="zoomSlider#id#" min="0.05" max="100" step="0.05" value="0.8"
+                    style="width:120px;">
+                <span style="font-size: small;">#lastupdate#</span>
+            </div>
         </div>
         <div id="svgContainer#id#" style="width:100%; overflow:hidden; position:relative;">
             <div id="svgViewport#id#" style="position:absolute; left:0; top:0;">
                 #svg#
             </div>
         </div>
-        <div style="font-size: small; margin-top:10px">#lastupdate#</div>
     </center>
     <script>
         if ('#refresh_id#' != '') {
@@ -111,8 +114,8 @@
             let panX = (cW - usefulW * scaleFit * scale) / 2;
             let panY = (cH - usefulH * scaleFit * scale) / 2;
 
-            // ✅ AJOUT : remonter les SVG de 12% de la hauteur
-            panY -= cH * 0.12;
+            // ✅ Remonte les SVG
+            panY -= cH * 0.25;
 
             /****************************************************
              * 3️⃣ Slider compressé (quadratique)
@@ -249,8 +252,8 @@
                 panX = (cW - usefulW * scaleFit * scale) / 2;
                 panY = (cH - usefulH * scaleFit * scale) / 2;
 
-                // ✅ remonte également au reset
-                panY -= cH * 0.12;
+                // ✅ Remonte les SVG au reset
+                panY -= cH * 0.25;
 
                 apply();
             });

@@ -108,6 +108,8 @@ class diagrelationnel extends eqLogic {
     $str = str_replace('[', '［', $_str);
     $str = str_replace(']', '］', $str);
     $str = str_replace('&', '＆', $str);
+    $str = str_replace('>', '＞', $str);
+    $str = str_replace('<', '＜', $str);
     return $str;
   }
 
@@ -492,21 +494,25 @@ class diagrelationnel extends eqLogic {
 
     if ($_forceupdate == 1) {
       log::add(__CLASS__, 'info', 'Demande de la mise à jour du diagramme relationnel');
-      ///////////////////////////////////////////////
-      // Modifier l'image du widget type loading ? //
-      ///////////////////////////////////////////////     
       log::add(__CLASS__, 'debug', '  dsltext à envoyer : ' . $dsltext);
       $result = $this->generate_diagram($dsltext); // Génération du diagramme
       //log::add(__CLASS__, 'debug', 'result : ' . $result);
 
-      $url = 'https://yuml.me/' . substr($result, 0, -4) . '.png';  // URL du fichier au format png      
-      $response = $this->get_diagram($url); // Récupération du diagramme
+      if (substr($result, -3) == 'svg') {
+        $url = 'https://yuml.me/' . $result;  // URL du fichier au format svg
+        //$url = 'https://yuml.me/' . substr($result, 0, -4) . '.png';  // URL du fichier au format png  
+        log::add(__CLASS__, 'debug', '  get_diagram with ' . $url);
+        $response = $this->get_diagram($url); // Récupération du diagramme
+      } else {
+        log::add(__CLASS__, 'error', 'Erreur lors de la génération du diagramme');
+        $response = null;
+      }
 
       if ($response === null) {
-        log::add(__CLASS__, 'error', 'Erreur lors de la récupération du diagramme à l\'adresse ' . $url);
+        log::add(__CLASS__, 'error', 'Erreur lors de la récupération du diagramme');
       } else {
         $filename = $this->getId();
-        $file = '/var/www/html/plugins/diagrelationnel/data/' . $filename . '.png';
+        $file = '/var/www/html/plugins/diagrelationnel/data/' . $filename . '.svg';
         $resu = file_put_contents($file, $response);
         if ($resu === FALSE) {
           log::add(__CLASS__, 'error', 'Erreur lors de l\'écriture du fichier dans ' . $file);
@@ -669,7 +675,14 @@ class diagrelationnel extends eqLogic {
     $refresh->setSubType('binary');
     $refresh->save();
 
-    $this->refreshLinks(0);
+    $lastupdate = $this->getCmd(null, 'lastupdate')->execCmd();
+    log::add(__CLASS__, 'debug', 'time : ' . time());
+    log::add(__CLASS__, 'debug', 'lastupdate : ' . $lastupdate);
+    log::add(__CLASS__, 'debug', 'POSTSAVE DONE');
+    if (time() - $lastupdate > 5) { // Pour éviter un nouveau refresh juste après un refresh forcé
+      log::add(__CLASS__, 'debug', 'Lancement de la vérification des liens entres les scénarios pour ' . $this->getName());
+      $this->refreshLinks(0);
+    }
   }
 
   // Fonction exécutée automatiquement avant la suppression de l'équipement
@@ -706,23 +719,31 @@ class diagrelationnel extends eqLogic {
     $selected_group = $this->getConfiguration('cfg_SelectedGroup');
     if ($selected_group != '') {
       $dir = '/var/www/html/plugins/diagrelationnel/data';
-      $filename = $this->getId() . '.png';
+      $filename = $this->getId() . '.svg';
       $linkschanged = $this->getCmd('info', 'linkschanged')->execCmd();
       $replace['#group_name#'] = $selected_group;
-      $replace['#url#'] = 'core/php/downloadFile.php?pathfile=' . urlencode($dir . '/' . $filename);
-      if ($this->getComment() == '') {
-        $replace['#desc#'] = '';
-      } else {
-        $replace['#desc#'] = '<p style="border: 2px solid rgba(var(--cat-other-color), var(--opacity)); border-top: 0px; border-radius: 0px 0px 20px 20px; margin-left: 30px; margin-right: 30px">' . $this->getComment() . '</p>';
-      }
-      if ($this->getCmd('info', 'lastupdate')->execCmd() == '') {
+      //$replace['#url#'] = 'core/php/downloadFile.php?pathfile=' . urlencode($dir . '/' . $filename);      
+      $content = file_get_contents($dir . '/' . $filename);
+      if ($content === false) {
+        $replace['#desc#'] = '<p style="border: 2px solid rgba(var(--cat-other-color), var(--opacity)); border-top: 0px; border-radius: 0px 0px 20px 20px; margin-left: 30px; margin-right: 30px">' . 'Le contenu est manquant, une mise à jour est nécéssaire' . '</p>';
+        $replace['#icon_color#'] = 'icon_yellow';
+        $replace['#icon_tips#'] = 'Le contenu est manquant, une mise à jour est nécéssaire';
         $replace['#lastupdate#'] = '';
       } else {
-        $replace['#lastupdate#'] = 'Mise à jour : ' . date('d/m/Y H:i:s', $this->getCmd('info', 'lastupdate')->execCmd());
+        $replace['#svg#'] = $content;
+        if ($this->getComment() == '') {
+          $replace['#desc#'] = '';
+        } else {
+          $replace['#desc#'] = '<p style="border: 2px solid rgba(var(--cat-other-color), var(--opacity)); border-top: 0px; border-radius: 0px 0px 20px 20px; margin-left: 30px; margin-right: 30px">' . $this->getComment() . '</p>';
+        }
+        if ($this->getCmd('info', 'lastupdate')->execCmd() == '') {
+          $replace['#lastupdate#'] = '';
+        } else {
+          $replace['#lastupdate#'] = 'Mise à jour : ' . date('d/m/Y H:i:s', $this->getCmd('info', 'lastupdate')->execCmd());
+        }
+        $replace['#icon_color#'] = $linkschanged == 1 ? 'icon_yellow' : '';
+        $replace['#icon_tips#'] = $linkschanged == 1 ? 'Un élément du diagramme a été modifié, une mise à jour est recommandée' : 'Le diagramme est à jour';
       }
-
-      $replace['#icon_color#'] = $linkschanged == 1 ? 'icon_yellow' : '';
-      $replace['#icon_tips#'] = $linkschanged == 1 ? 'Un élément du diagramme a été modifié, une mise à jour est recommandée' : 'Le diagramme est à jour';
     } else {
       $replace['#desc#'] = 'Cet objet n\'est associé à aucun groupe';
       $replace['#lastupdate#'] = '';

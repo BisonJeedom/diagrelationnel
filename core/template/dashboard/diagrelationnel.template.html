@@ -19,9 +19,21 @@
     </div>
     <center>
         <span>#desc#</span>
-        <img class="img-responsive cursor displayImage" src=#url# alt=""
-            style="max-width:260px; margin-top : 10px; background: var(--objectTxt-color)" />
-        <div style="font-size: small; margin-top:10px">#lastupdate#</div>
+        <div id="svgToolBar#id#" style="text-align:center; margin-bottom: 5px;">
+            <button class="btn btn-default btn-xs" id="zoomIn#id#">+</button>
+            <button class="btn btn-default btn-xs" id="zoomOut#id#">–</button>
+            <button class="btn btn-default btn-xs" id="reset#id#">Reset</button>
+            <div style="display:flex; justify-content:space-between; margin-top: 10px;">
+                <input type="range" id="zoomSlider#id#" min="0.05" max="100" step="0.05" value="0.8"
+                    style="width:120px;">
+                <span style="font-size: small;">#lastupdate#</span>
+            </div>
+        </div>
+        <div id="svgContainer#id#" style="width:100%; overflow:hidden; position:relative; background: aliceblue;">
+            <div id="svgViewport#id#" style="position:absolute; left:0; top:0;">
+                #svg#
+            </div>
+        </div>
     </center>
     <script>
         if ('#refresh_id#' != '') {
@@ -49,5 +61,204 @@
                 $('#md_modal').load('index.php?v=d&plugin=diagrelationnel&modal=modal.diagrelationnel&src=' + $(this).attr('src')).dialog('open');
             });
         }
+
+        setTimeout(() => {
+
+            const widget = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"]');
+            const header = widget.querySelector('.widget-name');
+            const container = document.getElementById("svgContainer#id#");
+            const viewport = document.getElementById("svgViewport#id#");
+            const svg = viewport.querySelector("svg");
+
+            if (!svg) return;
+
+            /* --------- Ajustement hauteur --------- */
+            container.style.height =
+                (widget.offsetHeight - header.offsetHeight - 10) + "px";
+
+            const cW = container.clientWidth;
+            const cH = container.clientHeight;
+
+            /****************************************************
+             * 1️⃣ Analyse zone utile
+             ****************************************************/
+            let minX = Infinity, minY = Infinity;
+            let maxX = -Infinity, maxY = -Infinity;
+
+            svg.querySelectorAll("*:not(defs):not(style)").forEach(el => {
+                try {
+                    const b = el.getBBox();
+                    if (b.width > 0 && b.height > 0) {
+                        minX = Math.min(minX, b.x);
+                        minY = Math.min(minY, b.y);
+                        maxX = Math.max(maxX, b.x + b.width);
+                        maxY = Math.max(maxY, b.y + b.height);
+                    }
+                } catch (e) { }
+            });
+
+            const usefulW = maxX - minX;
+            const usefulH = maxY - minY;
+
+            svg.setAttribute("viewBox", `${minX} ${minY} ${usefulW} ${usefulH}`);
+            svg.style.width = usefulW + "px";
+            svg.style.height = usefulH + "px";
+
+            /****************************************************
+             * 2️⃣ FIT + centrage horizontal + scale initial
+             ****************************************************/
+            const scaleFit = Math.min(cW / usefulW, cH / usefulH);
+
+            let scale = 0.8;
+
+            let panX = (cW - usefulW * scaleFit * scale) / 2;
+            let panY = (cH - usefulH * scaleFit * scale) / 2;
+
+            // ✅ Remonte les SVG
+            panY -= cH * 0.25;
+
+            /****************************************************
+             * 3️⃣ Slider compressé (quadratique)
+             ****************************************************/
+            const slider = document.getElementById("zoomSlider#id#");
+
+            const minScale = 0.05;
+            const maxScale = 100;
+
+            function scaleFromSlider(pos) {
+                const t = pos / 100;    // 0 → 1
+                return minScale + (maxScale - minScale) * (t * t);
+            }
+
+            function sliderFromScale(sc) {
+                const t = Math.sqrt((sc - minScale) / (maxScale - minScale));
+                return t * 100;
+            }
+
+            if (slider) slider.value = sliderFromScale(scale);
+
+            /****************************************************
+             * 4️⃣ Apply transform
+             ****************************************************/
+            function apply() {
+                viewport.style.transform =
+                    `translate(${panX}px, ${panY}px) scale(${scale * scaleFit})`;
+                viewport.style.transformOrigin = "0 0";
+
+                if (slider) {
+                    const v = sliderFromScale(scale);
+                    if (slider.value != v) slider.value = v;
+                }
+            }
+
+            apply();
+
+            /****************************************************
+             * 5️⃣ Slider → zoom centré sur le centre écran
+             ****************************************************/
+            if (slider) {
+                slider.addEventListener("input", e => {
+                    const old = scale;
+
+                    scale = scaleFromSlider(parseFloat(e.target.value));
+
+                    const cx = cW / 2;
+                    const cy = cH / 2;
+
+                    const worldX = (cx - panX) / (old * scaleFit);
+                    const worldY = (cy - panY) / (old * scaleFit);
+
+                    panX = cx - worldX * scale * scaleFit;
+                    panY = cy - worldY * scale * scaleFit;
+
+                    apply();
+                });
+            }
+
+            /****************************************************
+             * 6️⃣ Zoom molette (autour du curseur)
+             ****************************************************/
+            container.addEventListener("wheel", (e) => {
+                e.preventDefault();
+                const old = scale;
+
+                // ✅ Zoom molette plus puissant (0.25 au lieu de 0.1)
+                scale = Math.min(Math.max(
+                    old + (e.deltaY > 0 ? -0.25 : +0.25),
+                    minScale
+                ), maxScale);
+
+                const rect = container.getBoundingClientRect();
+                const px = e.clientX - rect.left;
+                const py = e.clientY - rect.top;
+
+                const worldX = (px - panX) / (old * scaleFit);
+                const worldY = (py - panY) / (old * scaleFit);
+
+                panX = px - worldX * scale * scaleFit;
+                panY = py - worldY * scale * scaleFit;
+
+                apply();
+            });
+
+            /****************************************************
+             * 7️⃣ PANNING
+             ****************************************************/
+            let isPanning = false, startX = 0, startY = 0;
+
+            container.addEventListener("mousedown", e => {
+                isPanning = true;
+                startX = e.clientX - panX;
+                startY = e.clientY - panY;
+            });
+
+            container.addEventListener("mousemove", e => {
+                if (!isPanning) return;
+                panX = e.clientX - startX;
+                panY = e.clientY - startY;
+                apply();
+            });
+
+            container.addEventListener("mouseup", () => isPanning = false);
+
+            /****************************************************
+             * ✅ 8️⃣ Boutons + et − → zoom centré
+             ****************************************************/
+            function zoomCentered(delta) {
+                const old = scale;
+                scale = Math.min(Math.max(old + delta, minScale), maxScale);
+
+                const cx = cW / 2;
+                const cy = cH / 2;
+
+                const worldX = (cx - panX) / (old * scaleFit);
+                const worldY = (cy - panY) / (old * scaleFit);
+
+                panX = cx - worldX * scale * scaleFit;
+                panY = cy - worldY * scale * scaleFit;
+
+                apply();
+            }
+
+            document.getElementById("zoomIn#id#")?.addEventListener("click", () => zoomCentered(+0.2));
+            document.getElementById("zoomOut#id#")?.addEventListener("click", () => zoomCentered(-0.2));
+
+            /****************************************************
+             * 9️⃣ bouton reset
+             ****************************************************/
+            document.getElementById("reset#id#")?.addEventListener("click", () => {
+                scale = 0.8;
+
+                panX = (cW - usefulW * scaleFit * scale) / 2;
+                panY = (cH - usefulH * scaleFit * scale) / 2;
+
+                // ✅ Remonte les SVG au reset
+                panY -= cH * 0.25;
+
+                apply();
+            });
+
+        }, 300);
+
     </script>
 </div>

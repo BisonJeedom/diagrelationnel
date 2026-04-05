@@ -45,13 +45,11 @@ class diagrelationnel extends eqLogic {
     self::refreshAll();
   }
 
-  function generate_diagram($_dsltext) {
-    //define('POSTVARS', $_dsltext);
+  function generate_diagram($_dsltext, $_direction = 'Top-Down') {
+    //define('POSTVARS', $_dsltext);    
     $ch = curl_init();
-
-    //curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/scruffy/class/');
-    //curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/nofunky;scale:200;dir:td/class/');
-    curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/nofunky;dir:td/class/');
+    $_direction = ($_direction == 'Left-Right') ? 'LR' : 'TD';
+    curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/nofunky;dir:' . $_direction . '/class/');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $_dsltext);
@@ -493,9 +491,12 @@ class diagrelationnel extends eqLogic {
     //log::add(__CLASS__, 'debug', 'relations : ' . $relations);
 
     if ($_forceupdate == 1) {
+      $directionCmd = $this->getCmd('info', 'direction');
+      $directionValue = is_object($directionCmd) ? $directionCmd->execCmd() : 'Top-Down';
       log::add(__CLASS__, 'info', 'Demande de la mise à jour du diagramme relationnel');
       log::add(__CLASS__, 'debug', '  dsltext à envoyer : ' . $dsltext);
-      $result = $this->generate_diagram($dsltext); // Génération du diagramme
+      log::add(__CLASS__, 'debug', '  Direction : ' . $directionValue);
+      $result = $this->generate_diagram($dsltext, $directionValue); // Génération du diagramme
       //log::add(__CLASS__, 'debug', 'result : ' . $result);
 
       if (substr($result, -3) == 'svg') {
@@ -675,6 +676,32 @@ class diagrelationnel extends eqLogic {
     $refresh->setSubType('binary');
     $refresh->save();
 
+    // --- Commande info direction ---
+    $cmd = $this->getCmd(null, 'direction');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName('Direction');
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->setLogicalId('direction');
+      $cmd->setType('info');
+      $cmd->setSubType('string');
+      $cmd->setIsVisible(1);
+      $cmd->save();
+    }
+
+    // --- Commande action direction_set ---
+    $cmdA = $this->getCmd(null, 'direction_set');
+    if (!is_object($cmdA)) {
+      $cmdA = new diagrelationnelCmd();
+      $cmdA->setName('Définir direction');
+      $cmdA->setEqLogic_id($this->getId());
+      $cmdA->setLogicalId('direction_set');
+      $cmdA->setType('action');
+      $cmdA->setSubType('other');
+      $cmdA->setIsVisible(0);
+      $cmdA->save();
+    }
+
     $lastupdate = $this->getCmd(null, 'lastupdate')->execCmd();
     log::add(__CLASS__, 'debug', 'time : ' . time());
     log::add(__CLASS__, 'debug', 'lastupdate : ' . $lastupdate);
@@ -743,6 +770,14 @@ class diagrelationnel extends eqLogic {
         }
         $replace['#icon_color#'] = $linkschanged == 1 ? 'icon_yellow' : '';
         $replace['#icon_tips#'] = $linkschanged == 1 ? 'Un élément du diagramme a été modifié, une mise à jour est recommandée' : 'Le diagramme est à jour';
+
+        $action = $this->getCmd('action', 'direction_set');
+        $replace['#action_id#'] = is_object($action) ? $action->getId() : '';
+
+        $directionCmd = $this->getCmd('info', 'direction');
+        $directionValue = is_object($directionCmd) ? $directionCmd->execCmd() : 'Top-Down';
+
+        $replace['#direction_value#'] = $directionValue;
       }
     } else {
       $replace['#desc#'] = 'Cet objet n\'est associé à aucun groupe';
@@ -786,6 +821,18 @@ class diagrelationnelCmd extends cmd {
       case 'refresh':
         log::add('diagrelationnel', 'debug', 'Mise à jour du diagramme relationnel de ' . $eqlogic->getName());
         $eqlogic->refreshLinks(1);
+        break;
+
+      case 'direction_set':
+        $value = $_options['slider']; // "Top-Down" ou "Left-Right"
+        log::add('diagrelationnel', 'debug', 'direction_set : ' . $value);
+        // On met à jour la commande info
+        $info = $eqlogic->getCmd('info', 'direction');
+        if (is_object($info)) {
+          $info->setValue($value);
+          $info->save();
+          $info->event($value);
+        }
         break;
 
       default:

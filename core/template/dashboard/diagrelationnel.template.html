@@ -19,16 +19,30 @@
     </div>
     <center>
         <span>#desc#</span>
-        <div id="svgToolBar#id#" style="text-align:center; margin-bottom: 5px;">
-            <button class="btn btn-default btn-xs" id="zoomIn#id#">+</button>
-            <button class="btn btn-default btn-xs" id="zoomOut#id#">–</button>
-            <button class="btn btn-default btn-xs" id="reset#id#">Reset</button>
+        <div id="svgToolBar#id#"
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+
+            <!-- Zone gauche : zoom -->
+            <div>
+                <button class="btn btn-default btn-xs" id="zoomIn#id#">+</button>
+                <button class="btn btn-default btn-xs" id="zoomOut#id#">–</button>
+                <button class="btn btn-default btn-xs" id="reset#id#">Reset</button>
+            </div>
+
+            <!-- Zone droite : direction -->
+            <div>
+                <button class="btn btn-default btn-xs directionBtn-#id#" data-value="Top-Down">Top-Down</button>
+                <button class="btn btn-default btn-xs directionBtn-#id#" data-value="Left-Right">Left-Right</button>
+            </div>
+        </div>
+        <div>
             <div style="display:flex; justify-content:space-between; margin-top: 10px;">
                 <input type="range" id="zoomSlider#id#" min="0.05" max="100" step="0.05" value="0.8"
                     style="width:120px;">
                 <span style="font-size: small;">#lastupdate#</span>
             </div>
         </div>
+
         <div id="svgContainer#id#" style="width:100%; overflow:hidden; position:relative; background: aliceblue;">
             <div id="svgViewport#id#" style="position:absolute; left:0; top:0;">
                 #svg#
@@ -37,11 +51,27 @@
     </center>
     <script>
         if ('#refresh_id#' != '') {
-            document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.addEventListener('click', function () {
-                jeedom.cmd.execute({ id: '#refresh_id#' })
-            })
+            const refreshEl = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh');
+            if (refreshEl) {
+                refreshEl.addEventListener('click', function () {
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.add('fa-spin');
+                    }
+
+                    jeedom.cmd.execute({
+                        id: '#refresh_id#',
+                        success: function () {
+                            if (icon) icon.classList.remove('fa-spin');
+                        },
+                        error: function () {
+                            if (icon) icon.classList.remove('fa-spin');
+                        }
+                    });
+                });
+            }
         } else {
-            document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.remove()
+            document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.remove();
         }
 
         if (typeof jeeFrontEnd !== 'undefined' && jeeFrontEnd.jeedomVersion !== 'undefined' && jeeFrontEnd.jeedomVersion > '4.4.0') {
@@ -61,6 +91,36 @@
                 $('#md_modal').load('index.php?v=d&plugin=diagrelationnel&modal=modal.diagrelationnel&src=' + $(this).attr('src')).dialog('open');
             });
         }
+
+        (function () {
+            var actionId = '#action_id#';
+            var current = '#direction_value#'; // on va le définir juste après
+
+            // Mise en forme du bouton actif au chargement
+            $('.directionBtn-#id#').each(function () {
+                if ($(this).data('value') === current) {
+                    $(this).addClass('active');
+                }
+            });
+
+            // Clic sur un bouton
+            $('.directionBtn-#id#').off('click').on('click', function () {
+                var value = $(this).data('value');
+
+                // Mise à jour visuelle
+                $('.directionBtn-#id#').removeClass('active');
+                $(this).addClass('active');
+
+                // Envoi à Jeedom
+                jeedom.cmd.execute({
+                    id: actionId,
+                    value: { slider: value }
+                });
+
+                // Animation manuelle du refresh
+                document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.click();
+            });
+        })();
 
         setTimeout(() => {
 
@@ -260,5 +320,16 @@
 
         }, 300);
 
+
     </script>
+
+    <style>
+        .directionBtn-#id#.active {
+            background-color: var(--link-color) !important;
+            color: white !important;
+            border: 1px solid var(--link-color) !important;
+            font-weight: bold;
+        }
+    </style>
+
 </div>

@@ -92,13 +92,25 @@
             });
         }
 
+        jeedom.cmd.update['#direction_id#'] = function (_options) {
+            var value = _options.display_value;
+
+            $('.directionBtn-#id#').removeClass('active');
+            $('.directionBtn-#id#').each(function () {
+                if ($(this).data('value') == value) {
+                    $(this).addClass('active');
+                }
+            });
+        };
+
+
         (function () {
             var actionId = '#action_id#';
-            var current = '#direction_value#'; // on va le définir juste après
+            var current = '#direction_value#'; // valeur actuelle de la commande info
 
-            // Mise en forme du bouton actif au chargement
+            // Mise en forme initiale au chargement
             $('.directionBtn-#id#').each(function () {
-                if ($(this).data('value') === current) {
+                if ($(this).data('value') == current) {
                     $(this).addClass('active');
                 }
             });
@@ -107,7 +119,7 @@
             $('.directionBtn-#id#').off('click').on('click', function () {
                 var value = $(this).data('value');
 
-                // Mise à jour visuelle
+                // Mise à jour visuelle immédiate
                 $('.directionBtn-#id#').removeClass('active');
                 $(this).addClass('active');
 
@@ -117,7 +129,7 @@
                     value: { slider: value }
                 });
 
-                // Animation manuelle du refresh
+                // Si tu veux garder ton refresh manuel
                 document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.click();
             });
         })();

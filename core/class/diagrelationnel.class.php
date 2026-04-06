@@ -116,18 +116,20 @@ class diagrelationnel extends eqLogic {
     $definedAction = cmd::searchConfiguration('"scenario_id":"' . $_id . '"');
     foreach ($definedAction as $cmd) {
       $cmdArray = utils::o2a($cmd);
-      foreach ($cmdArray['configuration']['actionCheckCmd'] as $actionCmd) {
-        try {
-          if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
-            $action = array(
-              'cmdId' => $cmd->getId(),
-              'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
-              'enable' => $actionCmd['options']['enable'],
-              'type' => 'actionCheckCmd'
-            );
-            array_push($return['definedAction'], $action);
+      if (isset($cmdArray['configuration']['actionCheckCmd'])) {
+        foreach ($cmdArray['configuration']['actionCheckCmd'] as $actionCmd) {
+          try {
+            if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
+              $action = array(
+                'cmdId' => $cmd->getId(),
+                'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
+                'enable' => $actionCmd['options']['enable'],
+                'type' => 'actionCheckCmd'
+              );
+              array_push($return['definedAction'], $action);
+            }
+          } catch (Exception $e) {
           }
-        } catch (Exception $e) {
         }
       }
       if (isset($cmdArray['configuration']['jeedomPreExecCmd'])) {
@@ -825,14 +827,23 @@ class diagrelationnelCmd extends cmd {
         break;
 
       case 'direction_set':
-        $value = $_options['slider']; // "Top-Down" ou "Left-Right"
-        log::add('diagrelationnel', 'debug', 'direction_set : ' . $value);
-        // On met à jour la commande info
-        $info = $eqlogic->getCmd('info', 'direction');
-        if (is_object($info)) {
-          $info->setValue($value);
-          $info->save();
-          $info->event($value);
+        // Valeur envoyée par le widget
+        $value = $_options['slider'] ?? null;
+
+        // Si aucune valeur n'est fournie (bouton Tester, scénario, etc.)
+        if ($value === null || $value === '') {
+          $current = $eqlogic->getCmd(null, 'direction')->execCmd();
+
+          // Toggle automatique
+          if ($current === 'Top-Down') {
+            $value = 'Left-Right';
+          } else {
+            $value = 'Top-Down';
+          }
+          $eqlogic->checkAndUpdateCmd('direction', $value);
+          $eqlogic->refreshLinks(1);
+        } else {
+          $eqlogic->checkAndUpdateCmd('direction', $value);
         }
         break;
 

@@ -643,64 +643,65 @@ class diagrelationnel extends eqLogic {
 
   // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
   public function postSave() {
-    $refresh = $this->getCmd(null, 'refresh');
-    if (!is_object($refresh)) {
-      $refresh = new diagrelationnelCmd();
-      $refresh->setName(__('Rafraichir', __FILE__));
+    $cmd = $this->getCmd(null, 'refresh');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName(__('Rafraichir', __FILE__));
     }
-    $refresh->setEqLogic_id($this->getId());
-    $refresh->setLogicalId('refresh');
-    $refresh->setType('action');
-    $refresh->setSubType('other');
-    $refresh->save();
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('refresh');
+    $cmd->setType('action');
+    $cmd->setSubType('other');
+    $cmd->save();
 
-    $refresh = $this->getCmd(null, 'lastupdate');
-    if (!is_object($refresh)) {
-      $refresh = new diagrelationnelCmd();
-      $refresh->setName(__('Dernière mise à jour', __FILE__));
+    $cmd = $this->getCmd(null, 'lastupdate');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName(__('Dernière mise à jour', __FILE__));
     }
-    $refresh->setEqLogic_id($this->getId());
-    $refresh->setLogicalId('lastupdate');
-    $refresh->setType('info');
-    $refresh->setSubType('numeric');
-    $refresh->save();
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('lastupdate');
+    $cmd->setType('info');
+    $cmd->setSubType('numeric');
+    $cmd->save();
 
-    $refresh = $this->getCmd(null, 'linkschanged');
-    if (!is_object($refresh)) {
-      $refresh = new diagrelationnelCmd();
-      $refresh->setName(__('Modification des relations', __FILE__));
+    $cmd = $this->getCmd(null, 'linkschanged');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName(__('Modification des relations', __FILE__));
     }
-    $refresh->setEqLogic_id($this->getId());
-    $refresh->setLogicalId('linkschanged');
-    $refresh->setType('info');
-    $refresh->setSubType('binary');
-    $refresh->save();
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('linkschanged');
+    $cmd->setType('info');
+    $cmd->setSubType('binary');
+    $cmd->save();
 
     // --- Commande info direction ---
     $cmd = $this->getCmd(null, 'direction');
     if (!is_object($cmd)) {
       $cmd = new diagrelationnelCmd();
       $cmd->setName('Direction');
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->setLogicalId('direction');
-      $cmd->setType('info');
-      $cmd->setSubType('string');
-      $cmd->setIsVisible(1);
-      $cmd->save();
     }
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('direction');
+    $cmd->setType('info');
+    $cmd->setSubType('string');
+    $cmd->setIsVisible(1);
+    $cmd->save();
 
     // --- Commande action direction_set ---
-    $cmdA = $this->getCmd(null, 'direction_set');
-    if (!is_object($cmdA)) {
-      $cmdA = new diagrelationnelCmd();
-      $cmdA->setName('Définir direction');
-      $cmdA->setEqLogic_id($this->getId());
-      $cmdA->setLogicalId('direction_set');
-      $cmdA->setType('action');
-      $cmdA->setSubType('other');
-      $cmdA->setIsVisible(0);
-      $cmdA->save();
+    $cmd = $this->getCmd(null, 'direction_set');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName('Changer direction');
     }
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('direction_set');
+    $cmd->setType('action');
+    $cmd->setSubType('other');
+    $cmd->setIsVisible(0);
+    $cmd->save();
+
 
     $lastupdate = $this->getCmd(null, 'lastupdate')->execCmd();
     log::add(__CLASS__, 'debug', 'time : ' . time());

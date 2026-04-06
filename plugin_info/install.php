@@ -25,6 +25,9 @@ function diagrelationnel_install() {
 // Fonction exécutée automatiquement après la mise à jour du plugin
 function diagrelationnel_update() {
     diagrelationnel::setupCron(1);
+    foreach (eqLogic::byType('diagrelationnel') as $eqLogic) {
+        $eqLogic->save(); // Sauvegarde des équipements lors de la mise à jour pour ajouter les nouvelles commandes
+    }
 }
 
 // Fonction exécutée automatiquement après la suppression du plugin

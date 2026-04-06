@@ -45,13 +45,11 @@ class diagrelationnel extends eqLogic {
     self::refreshAll();
   }
 
-  function generate_diagram($_dsltext) {
-    //define('POSTVARS', $_dsltext);
+  function generate_diagram($_dsltext, $_direction = 'Top-Down') {
+    //define('POSTVARS', $_dsltext);    
     $ch = curl_init();
-
-    //curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/scruffy/class/');
-    //curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/nofunky;scale:200;dir:td/class/');
-    curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/nofunky;dir:td/class/');
+    $_direction = ($_direction == 'Left-Right') ? 'LR' : 'TD';
+    curl_setopt($ch, CURLOPT_URL, 'https://yuml.me/diagram/nofunky;dir:' . $_direction . '/class/');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $_dsltext);
@@ -118,18 +116,20 @@ class diagrelationnel extends eqLogic {
     $definedAction = cmd::searchConfiguration('"scenario_id":"' . $_id . '"');
     foreach ($definedAction as $cmd) {
       $cmdArray = utils::o2a($cmd);
-      foreach ($cmdArray['configuration']['actionCheckCmd'] as $actionCmd) {
-        try {
-          if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
-            $action = array(
-              'cmdId' => $cmd->getId(),
-              'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
-              'enable' => $actionCmd['options']['enable'],
-              'type' => 'actionCheckCmd'
-            );
-            array_push($return['definedAction'], $action);
+      if (isset($cmdArray['configuration']['actionCheckCmd'])) {
+        foreach ($cmdArray['configuration']['actionCheckCmd'] as $actionCmd) {
+          try {
+            if ($actionCmd['cmd'] == 'scenario' && $actionCmd['options']['scenario_id'] == $_id) {
+              $action = array(
+                'cmdId' => $cmd->getId(),
+                'name' => $cmd->getEqLogic()->getHumanName() . ' [' . $cmd->getName() . ']',
+                'enable' => $actionCmd['options']['enable'],
+                'type' => 'actionCheckCmd'
+              );
+              array_push($return['definedAction'], $action);
+            }
+          } catch (Exception $e) {
           }
-        } catch (Exception $e) {
         }
       }
       if (isset($cmdArray['configuration']['jeedomPreExecCmd'])) {
@@ -493,9 +493,12 @@ class diagrelationnel extends eqLogic {
     //log::add(__CLASS__, 'debug', 'relations : ' . $relations);
 
     if ($_forceupdate == 1) {
+      $directionCmd = $this->getCmd('info', 'direction');
+      $directionValue = is_object($directionCmd) ? $directionCmd->execCmd() : 'Top-Down';
       log::add(__CLASS__, 'info', 'Demande de la mise à jour du diagramme relationnel');
       log::add(__CLASS__, 'debug', '  dsltext à envoyer : ' . $dsltext);
-      $result = $this->generate_diagram($dsltext); // Génération du diagramme
+      log::add(__CLASS__, 'debug', '  Direction : ' . $directionValue);
+      $result = $this->generate_diagram($dsltext, $directionValue); // Génération du diagramme
       //log::add(__CLASS__, 'debug', 'result : ' . $result);
 
       if (substr($result, -3) == 'svg') {
@@ -642,38 +645,65 @@ class diagrelationnel extends eqLogic {
 
   // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
   public function postSave() {
-    $refresh = $this->getCmd(null, 'refresh');
-    if (!is_object($refresh)) {
-      $refresh = new diagrelationnelCmd();
-      $refresh->setName(__('Rafraichir', __FILE__));
+    $cmd = $this->getCmd(null, 'refresh');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName(__('Rafraichir', __FILE__));
     }
-    $refresh->setEqLogic_id($this->getId());
-    $refresh->setLogicalId('refresh');
-    $refresh->setType('action');
-    $refresh->setSubType('other');
-    $refresh->save();
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('refresh');
+    $cmd->setType('action');
+    $cmd->setSubType('other');
+    $cmd->save();
 
-    $refresh = $this->getCmd(null, 'lastupdate');
-    if (!is_object($refresh)) {
-      $refresh = new diagrelationnelCmd();
-      $refresh->setName(__('Dernière mise à jour', __FILE__));
+    $cmd = $this->getCmd(null, 'lastupdate');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName(__('Dernière mise à jour', __FILE__));
     }
-    $refresh->setEqLogic_id($this->getId());
-    $refresh->setLogicalId('lastupdate');
-    $refresh->setType('info');
-    $refresh->setSubType('numeric');
-    $refresh->save();
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('lastupdate');
+    $cmd->setType('info');
+    $cmd->setSubType('numeric');
+    $cmd->save();
 
-    $refresh = $this->getCmd(null, 'linkschanged');
-    if (!is_object($refresh)) {
-      $refresh = new diagrelationnelCmd();
-      $refresh->setName(__('Modification des relations', __FILE__));
+    $cmd = $this->getCmd(null, 'linkschanged');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName(__('Modification des relations', __FILE__));
     }
-    $refresh->setEqLogic_id($this->getId());
-    $refresh->setLogicalId('linkschanged');
-    $refresh->setType('info');
-    $refresh->setSubType('binary');
-    $refresh->save();
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('linkschanged');
+    $cmd->setType('info');
+    $cmd->setSubType('binary');
+    $cmd->save();
+
+    // --- Commande info direction ---
+    $cmd = $this->getCmd(null, 'direction');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName('Direction');
+    }
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('direction');
+    $cmd->setType('info');
+    $cmd->setSubType('string');
+    $cmd->setIsVisible(1);
+    $cmd->save();
+
+    // --- Commande action direction_set ---
+    $cmd = $this->getCmd(null, 'direction_set');
+    if (!is_object($cmd)) {
+      $cmd = new diagrelationnelCmd();
+      $cmd->setName('Changer direction');
+    }
+    $cmd->setEqLogic_id($this->getId());
+    $cmd->setLogicalId('direction_set');
+    $cmd->setType('action');
+    $cmd->setSubType('other');
+    $cmd->setIsVisible(0);
+    $cmd->save();
+
 
     $lastupdate = $this->getCmd(null, 'lastupdate')->execCmd();
     log::add(__CLASS__, 'debug', 'time : ' . time());
@@ -743,6 +773,14 @@ class diagrelationnel extends eqLogic {
         }
         $replace['#icon_color#'] = $linkschanged == 1 ? 'icon_yellow' : '';
         $replace['#icon_tips#'] = $linkschanged == 1 ? 'Un élément du diagramme a été modifié, une mise à jour est recommandée' : 'Le diagramme est à jour';
+
+        $action = $this->getCmd('action', 'direction_set');
+        $replace['#action_id#'] = is_object($action) ? $action->getId() : '';
+
+        $directionCmd = $this->getCmd('info', 'direction');
+        $directionValue = is_object($directionCmd) ? $directionCmd->execCmd() : 'Top-Down';
+
+        $replace['#direction_value#'] = $directionValue;
       }
     } else {
       $replace['#desc#'] = 'Cet objet n\'est associé à aucun groupe';
@@ -786,6 +824,27 @@ class diagrelationnelCmd extends cmd {
       case 'refresh':
         log::add('diagrelationnel', 'debug', 'Mise à jour du diagramme relationnel de ' . $eqlogic->getName());
         $eqlogic->refreshLinks(1);
+        break;
+
+      case 'direction_set':
+        // Valeur envoyée par le widget
+        $value = $_options['slider'] ?? null;
+
+        // Si aucune valeur n'est fournie (bouton Tester, scénario, etc.)
+        if ($value === null || $value === '') {
+          $current = $eqlogic->getCmd(null, 'direction')->execCmd();
+
+          // Toggle automatique
+          if ($current === 'Top-Down') {
+            $value = 'Left-Right';
+          } else {
+            $value = 'Top-Down';
+          }
+          $eqlogic->checkAndUpdateCmd('direction', $value);
+          $eqlogic->refreshLinks(1);
+        } else {
+          $eqlogic->checkAndUpdateCmd('direction', $value);
+        }
         break;
 
       default:

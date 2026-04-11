@@ -692,7 +692,10 @@ class diagrelationnel extends eqLogic {
     $cmd->save();
 
     // Initialisation si la commande n'a pas encore de valeur
-    $this->checkAndUpdateCmd('direction', 'Top-Down');
+    $directionvalue = $this->getCmd(null, 'direction')->execCmd();
+    if ($directionvalue === '' || $directionvalue === null) {
+      $this->checkAndUpdateCmd('direction', 'Top-Down');
+    }
 
     // --- Commande action direction_set ---
     $cmd = $this->getCmd(null, 'direction_set');

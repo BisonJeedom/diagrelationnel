@@ -26,7 +26,10 @@ function diagrelationnel_install() {
 function diagrelationnel_update() {
     diagrelationnel::setupCron(1);
     foreach (eqLogic::byType('diagrelationnel') as $eqLogic) {
-        $eqLogic->save(); // Sauvegarde des équipements lors de la mise à jour pour ajouter les nouvelles commandes
+        $eqLogic->save(); // Sauvegarde des équipements lors de la mise à jour pour ajouter des nouvelles commandes
+        $filename = $eqLogic->getId();
+        $file = '/var/www/html/plugins/diagrelationnel/data/' . $filename . '.png'; // Suppression des fichiers .png car utilisation des .svg à présent
+        unlink($file);
     }
 }
 
